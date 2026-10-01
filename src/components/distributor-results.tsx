@@ -18,27 +18,32 @@ export function DistributorResults({ results: allResults }: { results: ProviderR
   const statusRows = results.filter((r) => r.status !== "ok");
 
   return (
-    <section aria-labelledby="distributor-results-heading">
-      <h2 id="distributor-results-heading" className="mb-3 text-lg font-semibold">
-        정식 유통사 결과
-      </h2>
+    <section aria-labelledby="distributor-results-heading" className="rounded-xl border border-line bg-surface">
+      <div className="flex items-center justify-between border-b border-line px-5 py-3">
+        <h2 id="distributor-results-heading" className="font-semibold">
+          정식 유통사 결과
+        </h2>
+        <span className="text-xs text-muted">유통사명 순 · 가격은 견적 문의로 안내</span>
+      </div>
 
       {results.length === 0 ? (
-        <p className="text-zinc-600 dark:text-zinc-400">현재 조회 가능한 유통사가 없습니다.</p>
+        <p className="px-5 py-6 text-sm text-muted">현재 조회 가능한 유통사가 없습니다.</p>
       ) : (
         <>
           {offers.length > 0 && (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] border-collapse text-sm">
+              <table className="w-full min-w-[860px] border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-300 text-left dark:border-zinc-700">
-                    <th className="p-2">유통사</th>
-                    <th className="p-2">제조사 / 품번</th>
-                    <th className="p-2">설명</th>
-                    <th className="p-2 text-right">재고</th>
-                    <th className="p-2 text-right">MOQ</th>
-                    <th className="p-2">조회 시각</th>
-                    <th className="p-2">링크</th>
+                  <tr className="text-left text-xs uppercase tracking-wide text-muted">
+                    <th className="px-5 py-2 font-medium">유통사</th>
+                    <th className="px-3 py-2 font-medium">제조사 / 품번</th>
+                    <th className="px-3 py-2 font-medium">설명</th>
+                    <th className="px-3 py-2 text-right font-medium">재고</th>
+                    <th className="px-3 py-2 text-right font-medium">MOQ</th>
+                    <th className="px-3 py-2 font-medium">조회 시각</th>
+                    <th className="px-5 py-2 font-medium">
+                      <span className="sr-only">링크</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -51,12 +56,19 @@ export function DistributorResults({ results: allResults }: { results: ProviderR
           )}
 
           {statusRows.length > 0 && (
-            <ul className="mt-3 space-y-1 text-sm">
+            <ul className="flex flex-wrap gap-2 border-t border-line px-5 py-3 text-xs">
               {statusRows.map((r) => (
-                <li key={r.providerId} className="text-zinc-600 dark:text-zinc-400">
-                  <span className="font-medium text-zinc-900 dark:text-zinc-100">{r.providerName}</span>:{" "}
-                  {r.status === "no_results" ? "검색 결과 없음" : unavailableLabel[r.reason]}{" "}
-                  <span className="text-xs">({formatFetchedAt(r.fetchedAt)})</span>
+                <li
+                  key={r.providerId}
+                  className={
+                    r.status === "no_results"
+                      ? "rounded-full bg-zinc-100 px-3 py-1 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                      : "rounded-full bg-copper-50 px-3 py-1 text-copper-700 dark:bg-copper-700/20 dark:text-copper-200"
+                  }
+                >
+                  <span className="font-semibold">{r.providerName}</span> ·{" "}
+                  {r.status === "no_results" ? "검색 결과 없음" : unavailableLabel[r.reason]}
+                  <span className="ml-1 opacity-70">({formatFetchedAt(r.fetchedAt)})</span>
                 </li>
               ))}
             </ul>
@@ -75,29 +87,56 @@ export function sortOffersByProvider<T extends Pick<Offer, "providerName">>(offe
     .map((x) => x.offer);
 }
 
+function StockBadge({ stock }: { stock: number | null }) {
+  if (stock == null) return <span className="text-muted">-</span>;
+  if (stock === 0) {
+    return (
+      <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+        <span className="size-1.5 rounded-full bg-zinc-400" />
+        재고 없음
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-pcb-50 px-2 py-0.5 text-xs font-semibold text-pcb-700 dark:bg-pcb-700/25 dark:text-pcb-100">
+      <span className="size-1.5 rounded-full bg-pcb-500" />
+      {formatInt(stock)}
+    </span>
+  );
+}
+
 function OfferRow({ offer }: { offer: Offer }) {
   return (
-    <tr className="border-b border-zinc-200 align-top dark:border-zinc-800">
-      <td className="p-2 font-medium">{offer.providerName}</td>
-      <td className="p-2">
-        <div>{offer.manufacturer}</div>
-        <div className="font-mono">{offer.mpn}</div>
+    <tr className="border-t border-line align-middle hover:bg-brand-50/50 dark:hover:bg-brand-900/20">
+      <td className="whitespace-nowrap px-5 py-3 font-semibold">{offer.providerName}</td>
+      <td className="px-3 py-3">
+        <div className="whitespace-nowrap text-muted">{offer.manufacturer}</div>
+        <div className="mpn font-medium">{offer.mpn}</div>
         {offer.lifecycle !== "active" && offer.lifecycle !== "unknown" && (
-          <div className="text-xs text-amber-700 dark:text-amber-400">{lifecycleLabel[offer.lifecycle]}</div>
+          <span className="mt-1 inline-block rounded bg-copper-100 px-1.5 py-0.5 text-[11px] font-semibold text-copper-700 dark:bg-copper-700/30 dark:text-copper-200">
+            {lifecycleLabel[offer.lifecycle]}
+          </span>
         )}
       </td>
-      <td className="p-2">
+      <td className="px-3 py-3">
         <div className="flex items-center gap-2">
           <PackageIllustration info={parsePackage(offer.description)} size={36} />
-          <span>{offer.description}</span>
+          <span className="text-muted">{offer.description}</span>
         </div>
       </td>
-      <td className="p-2 text-right">{offer.stock == null ? "-" : formatInt(offer.stock)}</td>
-      <td className="p-2 text-right">{offer.moq == null ? "-" : formatInt(offer.moq)}</td>
-      <td className="p-2 whitespace-nowrap">{formatFetchedAt(offer.fetchedAt)}</td>
-      <td className="p-2">
-        <a href={offer.productUrl} target="_blank" rel="noopener noreferrer nofollow" className="underline">
-          상품 페이지
+      <td className="px-3 py-3 text-right">
+        <StockBadge stock={offer.stock} />
+      </td>
+      <td className="mpn px-3 py-3 text-right text-muted">{offer.moq == null ? "-" : formatInt(offer.moq)}</td>
+      <td className="whitespace-nowrap px-3 py-3 text-xs text-muted">{formatFetchedAt(offer.fetchedAt)}</td>
+      <td className="px-5 py-3 text-right">
+        <a
+          href={offer.productUrl}
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+          className="whitespace-nowrap text-brand-600 hover:underline dark:text-brand-300"
+        >
+          상품 페이지 ↗
         </a>
       </td>
     </tr>

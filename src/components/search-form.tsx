@@ -1,33 +1,53 @@
 import Form from "next/form";
 
-export function SearchForm({ defaultQuery = "", defaultQty = "" }: { defaultQuery?: string; defaultQty?: string }) {
+export function SearchForm({
+  defaultQuery = "",
+  defaultQty = "",
+  size = "md",
+}: {
+  defaultQuery?: string;
+  defaultQty?: string;
+  size?: "md" | "lg";
+}) {
+  const h = size === "lg" ? "h-14 text-base" : "h-11 text-sm";
   return (
-    <Form action="/search" className="flex flex-col gap-2 sm:flex-row">
+    <Form
+      action="/search"
+      role="search"
+      className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-2 shadow-sm sm:flex-row sm:items-center"
+    >
       <label className="flex-1">
         <span className="sr-only">품번</span>
         <input
           name="q"
           defaultValue={defaultQuery}
           required
-          placeholder="제조사 품번(MPN) 입력"
-          className="w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="제조사 품번(MPN) 입력  예: ULN2003A"
+          className={`mpn w-full rounded-lg bg-transparent px-3 outline-none placeholder:font-sans placeholder:text-muted focus-visible:ring-2 focus-visible:ring-brand-400 ${h}`}
         />
       </label>
-      <label className="sm:w-36">
-        <span className="sr-only">수량 (선택)</span>
-        <input
-          name="qty"
-          type="number"
-          min={1}
-          step={1}
-          defaultValue={defaultQty}
-          placeholder="수량 (선택)"
-          className="w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-        />
-      </label>
-      <button type="submit" className="rounded bg-zinc-900 px-4 py-2 text-white dark:bg-zinc-100 dark:text-zinc-900">
-        검색
-      </button>
+      <div className="flex gap-2">
+        <label className="sm:w-32">
+          <span className="sr-only">수량 (선택)</span>
+          <input
+            name="qty"
+            type="number"
+            min={1}
+            step={1}
+            defaultValue={defaultQty}
+            placeholder="수량 (선택)"
+            className={`w-full rounded-lg border border-line bg-transparent px-3 outline-none placeholder:text-muted focus-visible:ring-2 focus-visible:ring-brand-400 ${h}`}
+          />
+        </label>
+        <button
+          type="submit"
+          className={`shrink-0 rounded-lg bg-brand-600 px-6 font-semibold text-white transition-colors hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400 ${h}`}
+        >
+          검색
+        </button>
+      </div>
     </Form>
   );
 }

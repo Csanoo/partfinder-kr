@@ -37,33 +37,42 @@ export function SourcingInquiryBox({
       data-emphasized={signals.emphasize}
       className={
         signals.emphasize
-          ? "rounded border-2 border-amber-500 bg-amber-50 p-4 dark:bg-amber-950/30"
-          : "rounded border border-dashed border-zinc-300 p-4 dark:border-zinc-700"
+          ? "flex flex-col rounded-xl border-2 border-copper-400 bg-copper-50 p-5 dark:border-copper-500 dark:bg-copper-700/15"
+          : "flex flex-col rounded-xl border border-dashed border-line bg-surface p-5"
       }
     >
-      <h2 id="sourcing-inquiry-heading" className="mb-1 font-semibold">
-        브로커 소싱 문의
-      </h2>
+      <div className="mb-1 flex items-center gap-2">
+        <h2 id="sourcing-inquiry-heading" className="font-semibold">
+          브로커 소싱 문의
+        </h2>
+        {signals.emphasize && (
+          <span className="rounded-full bg-copper-500 px-2 py-0.5 text-[11px] font-bold text-white">소싱 권장</span>
+        )}
+      </div>
 
       {signals.emphasize ? (
-        <ul className="mb-2 list-disc pl-5 text-sm">
+        <ul className="mb-3 list-disc space-y-0.5 pl-5 text-sm text-copper-700 dark:text-copper-200">
           {signals.reasons.map((r) => (
             <li key={r}>{reasonLabel[r]}</li>
           ))}
         </ul>
       ) : (
-        <p className="mb-2 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mb-3 text-sm text-muted">
           정식 유통사에서 구하기 어려운 경우 소싱을 문의할 수 있습니다.
         </p>
       )}
 
-      <p className="mb-3 text-xs text-zinc-700 dark:text-zinc-300">{SOURCING_DISCLAIMER}</p>
+      <p className="mb-4 rounded-md border border-line bg-surface/70 p-2 text-xs text-muted">{SOURCING_DISCLAIMER}</p>
 
       <BrokerListings results={brokerResults} />
 
       <Link
         href={inquiryHref("/inquiry/sourcing", mpn, qty, searchLogId)}
-        className="inline-block rounded border border-zinc-400 px-3 py-1.5 text-sm dark:border-zinc-600"
+        className={
+          signals.emphasize
+            ? "mt-auto inline-flex w-fit items-center rounded-lg bg-copper-500 px-4 py-2 text-sm font-semibold text-white hover:bg-copper-600"
+            : "mt-auto inline-flex w-fit items-center rounded-lg border border-copper-400 px-4 py-2 text-sm font-semibold text-copper-700 hover:bg-copper-50 dark:text-copper-200 dark:hover:bg-copper-700/20"
+        }
       >
         소싱 문의하기
       </Link>
@@ -79,20 +88,20 @@ function BrokerListings({ results }: { results: ProviderResult[] }) {
   const offers = results.flatMap((r) => (r.status === "ok" ? r.offers : []));
   if (offers.length === 0) return null;
   return (
-    <div className="mb-3" data-testid="broker-listings">
-      <h3 className="mb-1 text-sm font-medium">시장 재고 참고</h3>
-      <p className="mb-2 text-xs text-zinc-600 dark:text-zinc-400">
+    <div className="mb-4 rounded-lg border border-line bg-surface p-3" data-testid="broker-listings">
+      <h3 className="mb-1 text-sm font-semibold">시장 재고 참고</h3>
+      <p className="mb-2 text-xs text-muted">
         브로커가 게시한 재고 정보로, 실제 재고·정품 여부는 확인되지 않았습니다.
       </p>
       <ul className="space-y-1 text-sm">
         {offers.map((o) => (
-          <li key={`${o.providerId}:${o.productUrl}`} className="flex flex-wrap gap-x-2">
+          <li key={`${o.providerId}:${o.productUrl}`} className="flex flex-wrap items-baseline gap-x-2">
             <span className="font-medium">{o.providerName}</span>
-            <span className="font-mono">{o.mpn}</span>
+            <span className="mpn text-xs">{o.mpn}</span>
             <span>{o.stock == null ? "수량 미기재" : `${formatInt(o.stock)}개 게시`}</span>
-            <span className="text-xs text-zinc-500">({formatFetchedAt(o.fetchedAt)})</span>
-            <a href={o.productUrl} target="_blank" rel="noopener noreferrer nofollow" className="text-xs underline">
-              출처
+            <span className="text-xs text-muted">({formatFetchedAt(o.fetchedAt)})</span>
+            <a href={o.productUrl} target="_blank" rel="noopener noreferrer nofollow" className="text-xs text-brand-600 hover:underline dark:text-brand-300">
+              출처 ↗
             </a>
           </li>
         ))}

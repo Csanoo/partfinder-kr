@@ -296,9 +296,9 @@ export function PackageIllustration({ info, size = 120 }: { info: PackageInfo; s
 /** 일러스트 + 패키지명 캡션 */
 export function PackageFigure({ info, size = 120 }: { info: PackageInfo; size?: number }) {
   return (
-    <figure className="inline-flex flex-col items-center gap-1 rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900">
+    <figure className="inline-flex flex-col items-center gap-1 rounded-xl border border-line bg-surface p-3">
       <PackageIllustration info={info} size={size} />
-      <figcaption className="text-xs text-zinc-600 dark:text-zinc-400">
+      <figcaption className="mpn text-xs text-muted">
         {info.label}
         {info.family !== "unknown" && <span className="sr-only"> (실제 제품 사진 아님)</span>}
       </figcaption>

@@ -23,7 +23,7 @@ export function SearchResultSections({
   return (
     <>
       <DistributorResults results={results} qty={qty} />
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
         <QuoteInquiryBox mpn={mpn} qty={qty} searchLogId={searchLogId} />
         <SourcingInquiryBox
           mpn={mpn}

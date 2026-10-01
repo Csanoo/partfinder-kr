@@ -16,8 +16,8 @@ export default async function QuoteInquiryPage(props: PageProps<"/inquiry/quote"
   const consent = consentTexts();
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <h1 className="text-2xl font-semibold">견적 문의</h1>
-      <p className="text-zinc-600 dark:text-zinc-400">
+      <h1 className="text-2xl font-bold">견적 문의</h1>
+      <p className="text-muted">
         품번과 수량을 남기시면 담당자가 확인 후 연락드립니다. 연락처는 회신 용도로만 사용합니다.
       </p>
       <InquiryForm

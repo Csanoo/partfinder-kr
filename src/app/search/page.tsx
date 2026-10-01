@@ -45,9 +45,17 @@ export default async function SearchPage(props: PageProps<"/search">) {
       <SearchForm defaultQuery={rawQuery} defaultQty={qty == null ? "" : String(qty)} />
 
       {results == null ? (
-        <p className="text-zinc-600 dark:text-zinc-400">품번을 입력해 주세요.</p>
+        <p className="text-muted">품번을 입력해 주세요.</p>
       ) : (
-        <SearchResultSections results={results} mpn={rawQuery.trim()} qty={qty} searchLogId={searchLogId} />
+        <>
+          <h1 className="text-xl font-bold">
+            <span className="mpn">{query.normalized}</span>
+            <span className="ml-2 text-base font-normal text-muted">
+              검색 결과{qty != null && ` · 필요 수량 ${qty.toLocaleString("ko-KR")}개`}
+            </span>
+          </h1>
+          <SearchResultSections results={results} mpn={rawQuery.trim()} qty={qty} searchLogId={searchLogId} />
+        </>
       )}
     </div>
   );

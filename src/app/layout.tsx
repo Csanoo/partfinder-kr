@@ -1,9 +1,20 @@
 import type { Metadata } from "next";
+import { IBM_Plex_Sans_KR, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import { JsonLd } from "@/components/json-ld";
 import { Logo } from "@/components/logo";
 import { site } from "@/lib/site";
 import "./globals.css";
+
+// next/font 로 자체 호스팅 (외부 요청 없음, 필요한 글리프만 분할 로드)
+const plexKr = IBM_Plex_Sans_KR({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-plex-kr",
+  display: "swap",
+  preload: false,
+});
+const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -16,8 +27,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">
+    <html lang="ko" className={`${plexKr.variable} ${jetbrains.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col">
         <JsonLd
           data={[
             {
@@ -45,16 +56,36 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             },
           ]}
         />
-        <header className="border-b border-zinc-200 dark:border-zinc-800">
-          <div className="mx-auto max-w-6xl px-4 py-3">
+
+        <header className="sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur">
+          <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
             <Link href="/" aria-label={`${site.name} 홈`}>
               <Logo />
             </Link>
+            <nav aria-label="주 메뉴" className="flex items-center gap-1 text-sm">
+              <Link href="/" className="rounded-md px-3 py-1.5 text-muted hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-900/40 dark:hover:text-brand-200">
+                부품 검색
+              </Link>
+              <Link
+                href="/inquiry/sourcing"
+                className="rounded-md bg-brand-600 px-3 py-1.5 font-medium text-white hover:bg-brand-700"
+              >
+                소싱 문의
+              </Link>
+            </nav>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
-        <footer className="border-t border-zinc-200 py-4 text-center text-xs text-zinc-500 dark:border-zinc-800">
-          © {site.legalName}
+
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
+
+        <footer className="border-t border-line bg-surface">
+          <div className="mx-auto max-w-6xl space-y-2 px-4 py-6 text-xs text-muted">
+            {/* TODO(확인필요): 운영 주체 고지 정확한 문구 (SEO 명세 제약 6) */}
+            <p>
+              본 사이트는 독립 운영되며, 소싱 문의는 협력 브로커를 통해 처리됩니다. 제조사·정식 유통사와 무관합니다.
+            </p>
+            <p>© {site.legalName}</p>
+          </div>
         </footer>
       </body>
     </html>

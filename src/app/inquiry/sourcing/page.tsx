@@ -17,8 +17,10 @@ export default async function SourcingInquiryPage(props: PageProps<"/inquiry/sou
   const consent = consentTexts();
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <h1 className="text-2xl font-semibold">브로커 소싱 문의</h1>
-      <p className="rounded border border-amber-400 bg-amber-50 p-3 text-sm dark:bg-amber-950/30">{SOURCING_DISCLAIMER}</p>
+      <h1 className="text-2xl font-bold">브로커 소싱 문의</h1>
+      <p className="rounded-lg border border-copper-300 bg-copper-50 p-3 text-sm text-copper-700 dark:border-copper-600 dark:bg-copper-700/15 dark:text-copper-200">
+        {SOURCING_DISCLAIMER}
+      </p>
       <InquiryForm
         type="sourcing"
         action={submitSourcingInquiry}

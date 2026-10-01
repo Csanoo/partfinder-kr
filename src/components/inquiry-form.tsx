@@ -14,7 +14,7 @@ interface Props {
 }
 
 const input =
-  "w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900 aria-[invalid=true]:border-red-500";
+  "w-full rounded-lg border border-line bg-surface px-3 py-2 outline-none focus-visible:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-200 dark:focus-visible:ring-brand-800 aria-[invalid=true]:border-red-500";
 
 export function InquiryForm({ type, action, defaults, consent }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
@@ -23,7 +23,7 @@ export function InquiryForm({ type, action, defaults, consent }: Props) {
   const err = (name: string) => state.errors?.[name];
 
   return (
-    <form action={formAction} className="space-y-5" noValidate>
+    <form action={formAction} className="space-y-6 rounded-xl border border-line bg-surface p-6" noValidate>
       {state.message && (
         <p role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200">
           {state.message}
@@ -41,7 +41,7 @@ export function InquiryForm({ type, action, defaults, consent }: Props) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="품번" required error={err("mpn")} htmlFor="mpn">
-          <input id="mpn" name="mpn" defaultValue={v("mpn", defaults.mpn)} required maxLength={64} className={`${input} font-mono`} aria-invalid={!!err("mpn")} />
+          <input id="mpn" name="mpn" defaultValue={v("mpn", defaults.mpn)} required maxLength={64} className={`${input} mpn`} aria-invalid={!!err("mpn")} />
         </Field>
         <Field label="수량" required error={err("qty")} htmlFor="qty">
           <input id="qty" name="qty" type="number" min={1} step={1} defaultValue={v("qty", defaults.qty)} required className={input} aria-invalid={!!err("qty")} />
@@ -124,7 +124,11 @@ export function InquiryForm({ type, action, defaults, consent }: Props) {
         <Consent name="consentThirdParty" text={consent.thirdParty} label="개인정보 제3자 제공에 동의합니다." checked={v("consentThirdParty") === "on"} error={err("consentThirdParty")} />
       )}
 
-      <button type="submit" disabled={pending} className="rounded bg-zinc-900 px-5 py-2 text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900">
+      <button
+        type="submit"
+        disabled={pending}
+        className={`w-full rounded-lg px-5 py-3 font-semibold text-white disabled:opacity-50 sm:w-auto ${type === "quote" ? "bg-brand-600 hover:bg-brand-700" : "bg-copper-500 hover:bg-copper-600"}`}
+      >
         {pending ? "접수 중…" : type === "quote" ? "견적 문의 접수" : "소싱 문의 접수"}
       </button>
     </form>
@@ -170,11 +174,11 @@ function Field({
 function Consent({ name, text, label, checked, error }: { name: string; text: string; label: string; checked: boolean; error?: string }) {
   return (
     <div>
-      <pre className="mb-2 max-h-40 overflow-auto whitespace-pre-wrap rounded border border-zinc-200 bg-zinc-50 p-3 text-xs dark:border-zinc-800 dark:bg-zinc-900">
+      <pre className="mb-2 max-h-40 overflow-auto whitespace-pre-wrap rounded-lg border border-line bg-background p-3 font-sans text-xs text-muted">
         {text}
       </pre>
       <label className="inline-flex items-center gap-2 text-sm">
-        <input type="checkbox" name={name} defaultChecked={checked} required /> {label} <Req />
+        <input type="checkbox" name={name} defaultChecked={checked} required className="size-4 accent-brand-600" /> {label} <Req />
       </label>
       <ErrorText text={error} />
     </div>
