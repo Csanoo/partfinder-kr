@@ -8,6 +8,7 @@
 | 날짜 | 변경 |
 |---|---|
 | 2026-10-01 | 초안 |
+| 2026-10-01 | HKinventory를 수집 후보에 추가 (공개 품번 페이지 한정, robots.txt 확인) |
 | 2026-10-01 | 제약 1 변경: "공식 API만 사용" 제거 → 공개 웹페이지 수집·제휴 피드·재고 리스트 업로드 등 가능한 방법 허용 (수집 가드레일 신설). 사업 성격이 브로커 비즈니스임을 반영해 소스 분류(정식 유통사 / 브로커·시장 재고) 추가 |
 
 ## 1. 목적
@@ -149,8 +150,9 @@ inquiry
 5. 관리자 화면과 지표
 6. 공통 수집 인프라: 소스 분류(authorized/broker), 소스별 rate limiter·일일 쿼터·차단 감지 쿨다운
 7. 소스별 Provider 구현 (공개 웹페이지 수집은 저장된 HTML fixture로 파서 테스트 후 플래그 on)
-   - 후보: Mouser(API), DigiKey(API, 승인 후), LCSC, Heisener, Censtry, Worldway Electronics
-   - 제외: HKinventory 등 회원 전용 데이터 (가드레일)
+   - 후보: Mouser(API), DigiKey(API, 승인 후), LCSC, Heisener, Censtry, Worldway Electronics, HKinventory
+   - HKinventory: robots.txt상 공개 품번 페이지(`/p/d/{MPN}.htm`)만 허용 범위. 회원 영역(`/member/*`), 상세(`/public/PartDetail.asp`), `/part_number/*` 등은 수집하지 않는다. 로그인 후에만 보이는 판매자·가격 정보도 제외.
+   - 웹페이지 수집 Provider는 `fetchPage`(robots.txt 확인, 식별 가능한 UA, 차단 감지)를 통해서만 요청한다.
 
 각 단계마다 테스트를 작성하고, 단계 완료 시 변경 요약과 남은 `TODO(확인필요)` 목록을 보고한다.
 

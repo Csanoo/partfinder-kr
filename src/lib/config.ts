@@ -24,6 +24,8 @@ export const providerFlags = {
   heisener: () => flag("PROVIDER_HEISENER_ENABLED"),
   censtry: () => flag("PROVIDER_CENSTRY_ENABLED"),
   worldway: () => flag("PROVIDER_WORLDWAY_ENABLED"),
+  // 공개 품번 페이지(/p/d/{MPN}.htm)만. 회원 영역·robots 금지 경로 제외
+  hkinventory: () => flag("PROVIDER_HKINVENTORY_ENABLED"),
 };
 
 /**

@@ -41,6 +41,10 @@ const entries: ProviderEntry[] = [
     enabled: providerFlags.worldway,
     create: () => new NotImplementedProvider("worldway", "Worldway Electronics", "broker"),
   },
+  {
+    enabled: providerFlags.hkinventory,
+    create: () => new NotImplementedProvider("hkinventory", "HKinventory", "broker"),
+  },
 ];
 
 /** 현재 플래그 기준으로 활성화된 Provider 목록. */
