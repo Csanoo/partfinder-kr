@@ -3,14 +3,14 @@
  * 여러 번 실행해도 같은 결과가 되도록 이미 있으면 건너뛴다.
  * 실행: npm run db:seed
  */
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@/generated/prisma/client";
 import type { PageStatus } from "@/generated/prisma/enums";
+import { db as getDb } from "@/lib/db";
 import { addVariant, createPart } from "@/lib/parts/service";
 import { mpnKey } from "@/lib/parts/slug";
 
 process.loadEnvFile(".env");
-const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
+// 공용 연결 사용 (세션 시간대 UTC 고정 포함)
+const db = getDb();
 
 const manufacturers = [
   { slug: "texas-instruments", nameKo: "텍사스 인스트루먼트", nameEn: "Texas Instruments" },
