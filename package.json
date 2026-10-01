@@ -16,6 +16,7 @@
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "tsx prisma/seed.ts",
     "mfr:fetch": "tsx scripts/fetch-manufacturer-facts.mts",
+    "privacy:purge": "tsx scripts/purge-personal-data.mts",
     "db:generate": "prisma generate"
   },
   "dependencies": {

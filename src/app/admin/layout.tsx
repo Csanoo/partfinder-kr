@@ -4,6 +4,9 @@ import Link from "next/link";
 export const metadata: Metadata = { title: "관리자", robots: { index: false, follow: false } };
 
 const nav = [
+  { href: "/admin", label: "대시보드" },
+  { href: "/admin/inquiries", label: "문의" },
+  { href: "/admin/seo", label: "SEO 지표" },
   { href: "/admin/parts", label: "부품" },
   { href: "/admin/parts/new", label: "부품 등록" },
   { href: "/admin/parts/import", label: "CSV 가져오기" },
