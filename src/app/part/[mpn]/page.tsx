@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { cache } from "react";
 import { JsonLd } from "@/components/json-ld";
+import { PackageFigure } from "@/components/package-illustration";
+import { parsePackage } from "@/lib/package/parse-package";
 import { SearchForm } from "@/components/search-form";
 import { SearchResultSections } from "@/components/search-result-sections";
 import { normalizeMpn, toSearchQuery } from "@/lib/search/normalize";
@@ -53,6 +55,7 @@ export default async function PartPage(props: PageProps<"/part/[mpn]">) {
 
   const { results, summary } = await loadPart(mpn);
   const url = absoluteUrl(partPath(mpn));
+  const pkg = parsePackage(summary.description);
 
   const productLd: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -95,12 +98,18 @@ export default async function PartPage(props: PageProps<"/part/[mpn]">) {
         / <span>{mpn}</span>
       </nav>
 
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold">
-          <span className="font-mono">{mpn}</span> 재고·가격
-        </h1>
-        {/* 답변 엔진이 인용하기 쉬운 첫 문단: 결론 먼저 */}
-        <p className="text-zinc-700 dark:text-zinc-300">{summary.headline}</p>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <PackageFigure info={pkg} size={112} />
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold">
+            <span className="font-mono">{mpn}</span> 재고·가격
+          </h1>
+          {/* 답변 엔진이 인용하기 쉬운 첫 문단: 결론 먼저 */}
+          <p className="text-zinc-700 dark:text-zinc-300">{summary.headline}</p>
+          {pkg.family !== "unknown" && (
+            <p className="text-xs text-zinc-500">패키지 그림은 형태를 나타낸 일러스트이며 실제 제품 사진이 아닙니다.</p>
+          )}
+        </div>
       </header>
 
       <SearchForm defaultQuery={mpn} />

@@ -1,3 +1,5 @@
+import { PackageIllustration } from "@/components/package-illustration";
+import { parsePackage } from "@/lib/package/parse-package";
 import { formatFetchedAt, formatInt, formatMoney, lifecycleLabel, unavailableLabel } from "@/lib/format";
 import type { Offer, ProviderResult } from "@/lib/providers/types";
 import { priceAtQty, sortOffersByPrice } from "@/lib/search/pricing";
@@ -80,7 +82,12 @@ function OfferRow({ offer, qty }: { offer: Offer; qty: number | null }) {
           <div className="text-xs text-amber-700 dark:text-amber-400">{lifecycleLabel[offer.lifecycle]}</div>
         )}
       </td>
-      <td className="p-2">{offer.description}</td>
+      <td className="p-2">
+        <div className="flex items-center gap-2">
+          <PackageIllustration info={parsePackage(offer.description)} size={36} />
+          <span>{offer.description}</span>
+        </div>
+      </td>
       <td className="p-2 text-right">{offer.stock == null ? "-" : formatInt(offer.stock)}</td>
       <td className="p-2">
         {breaks.length === 0 ? (
