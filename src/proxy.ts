@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { verifyAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { resolvePartRoute } from "@/lib/parts/resolve-route";
 import { prismaPartRouteRepo } from "@/lib/parts/service";
@@ -9,6 +10,19 @@ export const SESSION_HEADER = "x-pf-sid";
 const PART_PATH = /^\/parts\/([^/]+)\/([^/]+)\/?$/;
 
 export async function proxy(request: NextRequest) {
+  // 관리자 화면: Basic Auth (docs/SPEC.md 8장)
+  if (request.nextUrl.pathname === "/admin" || request.nextUrl.pathname.startsWith("/admin/")) {
+    if (verifyAdmin(request.headers.get("authorization")) == null) {
+      return new NextResponse("인증이 필요합니다.", {
+        status: 401,
+        headers: { "WWW-Authenticate": 'Basic realm="MS admin", charset="UTF-8"', "X-Robots-Tag": "noindex" },
+      });
+    }
+    const res = NextResponse.next();
+    res.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return res;
+  }
+
   // 부품 URL: 정규화 301, 비게시 410 (docs/SEO_SPEC.md 4장). Proxy는 Node.js 런타임이라 DB 조회 가능
   const m = PART_PATH.exec(request.nextUrl.pathname);
   if (m) {
@@ -63,5 +77,5 @@ const GONE_HTML = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><m
 <p><a href="/">부품 검색으로 이동</a></p></body></html>`;
 
 export const config = {
-  matcher: ["/search", "/parts/:path*"],
+  matcher: ["/search", "/parts/:path*", "/admin", "/admin/:path*"],
 };

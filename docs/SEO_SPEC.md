@@ -7,6 +7,7 @@
 
 | 날짜 | 변경 |
 |---|---|
+| 2026-10-01 | AI 크롤러 기본값 결정 (6.2) |
 | 2026-10-01 | 수신. 진행 결정. 가격은 모든 화면(`/search` 포함)에서 제거 결정 (10장 마지막 항목 해소) |
 
 ## 1. 목적
@@ -135,7 +136,11 @@ part_variant   (패키징 접미사 등 변형 품번)
 - `sitemap.xml`은 사이트맵 인덱스 + 유형별 분할(parts, manufacturers, categories). 파일당 URL 50,000개 이하.
 - indexable=true인 페이지만 포함, `lastmod`는 실제 콘텐츠 수정 시각.
 - `robots.txt`: `/admin`, `/search`, `/api` 차단, 사이트맵 경로 명시.
-- AI 크롤러(GPTBot, ClaudeBot, PerplexityBot, Google-Extended 등) 허용 여부는 환경설정 목록으로 관리. 기본값은 `TODO(확인필요)`.
+- AI 크롤러(GPTBot, ClaudeBot, PerplexityBot, Google-Extended 등) 허용 여부는 환경설정 목록으로 관리.
+  - 기본값 (결정 2026-10-01): **검색·답변용은 허용, 학습용은 차단.**
+    - 허용(검색·답변·사용자 요청): OAI-SearchBot, ChatGPT-User, PerplexityBot, Perplexity-User, Claude-SearchBot, Claude-User
+    - 차단(모델 학습): GPTBot, ClaudeBot, Google-Extended, Applebot-Extended, CCBot, Bytespider, meta-externalagent
+    - 목록은 환경변수로 덮어쓸 수 있게 한다 (봇 이름은 각 사 공지에 따라 바뀔 수 있음).
 
 ### 6.3 성능
 - Core Web Vitals 기준 충족을 목표로: 부품 페이지 LCP 요소는 텍스트, 이미지 최소화, 폰트 subset.
@@ -187,7 +192,7 @@ part_variant   (패키징 접미사 등 변형 품번)
 ## 10. 미정 사항 (임의 결정 금지)
 
 - 운영 주체 고지 정확한 문구
-- AI 크롤러 허용 기본값
+- ~~AI 크롤러 허용 기본값~~ → 2026-10-01 결정: 검색·답변용 허용, 학습용 차단 (6.2)
 - 변형 품번 판정 규칙
 - 도메인 (사이트명은 MS전자로 결정)
 - 초기 게시 부품 목록(지인 거래 이력 기반 300~500개 예정)
