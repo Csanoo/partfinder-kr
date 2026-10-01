@@ -6,6 +6,7 @@ import {
   type ProviderErrorReason,
   type ProviderId,
   type SearchQuery,
+  type SourceKind,
 } from "@/lib/providers/types";
 
 type FixtureOffer = Omit<Offer, "providerId" | "providerName" | "fetchedAt">;
@@ -21,6 +22,7 @@ export class MockProvider implements PartProvider {
     readonly id: ProviderId,
     readonly displayName: string,
     fixture: MockFixture,
+    readonly kind: SourceKind = "authorized",
   ) {
     this.fixture = new Map(Object.entries(fixture).map(([k, v]) => [normalizeMpn(k), v]));
   }

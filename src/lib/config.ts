@@ -20,6 +20,10 @@ export const providerFlags = {
   mouser: () => flag("PROVIDER_MOUSER_ENABLED"),
   // DigiKey: 외부 사이트 표시 사전 승인 회신 전까지 프로덕션에서 켜지 않는다.
   digikey: () => flag("PROVIDER_DIGIKEY_ENABLED"),
+  // 공개 웹페이지 수집 소스 (broker). TODO(확인필요): 소스별 이용약관 검토 전까지 프로덕션에서 off
+  heisener: () => flag("PROVIDER_HEISENER_ENABLED"),
+  censtry: () => flag("PROVIDER_CENSTRY_ENABLED"),
+  worldway: () => flag("PROVIDER_WORLDWAY_ENABLED"),
 };
 
 /**

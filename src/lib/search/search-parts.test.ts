@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ProviderRateLimiter } from "@/lib/providers/rate-limiter";
 import { getEnabledProviders } from "@/lib/providers/registry";
 import { ProviderError, type PartProvider, type ProviderResult } from "@/lib/providers/types";
 import { TtlCache } from "@/lib/search/cache";
@@ -77,7 +78,7 @@ describe("searchParts with mock fixtures", () => {
   });
 
   it("빈 검색어는 Provider를 호출하지 않는다", async () => {
-    const provider: PartProvider = { id: "p", displayName: "P", search: vi.fn(async () => []) };
+    const provider: PartProvider = { id: "p", displayName: "P", kind: "authorized", search: vi.fn(async () => []) };
     expect(await run("   ", [provider])).toEqual([]);
     expect(provider.search).not.toHaveBeenCalled();
   });
@@ -86,7 +87,7 @@ describe("searchParts with mock fixtures", () => {
 describe("searchParts error handling and cache", () => {
   it("응답이 늦으면 timeout으로 조회 불가 처리", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
-    const slow: PartProvider = { id: "slow", displayName: "Slow", search: () => new Promise(() => {}) };
+    const slow: PartProvider = { id: "slow", displayName: "Slow", kind: "authorized", search: () => new Promise(() => {}) };
     const results = await searchParts(toSearchQuery("X"), {
       providers: [slow],
       cache: new TtlCache(),
@@ -101,6 +102,7 @@ describe("searchParts error handling and cache", () => {
     const broken: PartProvider = {
       id: "broken",
       displayName: "Broken",
+      kind: "authorized",
       search: async () => {
         throw new Error("boom");
       },
@@ -112,7 +114,7 @@ describe("searchParts error handling and cache", () => {
     let t = 0;
     const cache = new TtlCache<ProviderResult>(() => t);
     const search = vi.fn(async () => []);
-    const provider: PartProvider = { id: "p", displayName: "P", search };
+    const provider: PartProvider = { id: "p", displayName: "P", kind: "authorized", search };
 
     await run("X", [provider], cache);
     t += 899_000;
@@ -129,10 +131,64 @@ describe("searchParts error handling and cache", () => {
     const search = vi.fn(async () => {
       throw new ProviderError("rate_limited");
     });
-    const provider: PartProvider = { id: "p", displayName: "P", search };
+    const provider: PartProvider = { id: "p", displayName: "P", kind: "authorized", search };
     const cache = new TtlCache<ProviderResult>();
     await run("X", [provider], cache);
     await run("X", [provider], cache);
     expect(search).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("searchParts with rate limiter", () => {
+  function runLimited(raw: string, providers: PartProvider[], limiter: ProviderRateLimiter) {
+    return searchParts(toSearchQuery(raw), {
+      providers,
+      limiter,
+      cache: new TtlCache<ProviderResult>(),
+      now: fixedNow,
+      timeoutMs: 1000,
+    });
+  }
+
+  it("한도에 걸린 Provider만 조회 불가, 나머지는 정상", async () => {
+    const limiter = new ProviderRateLimiter();
+    const limited: PartProvider = {
+      id: "limited",
+      displayName: "Limited",
+      kind: "authorized",
+      rateLimit: { perDay: 1 },
+      search: vi.fn(async () => []),
+    };
+    const free: PartProvider = { id: "free", displayName: "Free", kind: "authorized", search: vi.fn(async () => []) };
+
+    await runLimited("A", [limited, free], limiter);
+    const results = await runLimited("B", [limited, free], limiter);
+    expect(results[0]).toMatchObject({ providerId: "limited", status: "unavailable", reason: "quota_exceeded" });
+    expect(results[1]).toMatchObject({ providerId: "free", status: "no_results" });
+    expect(limited.search).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocked 응답을 받으면 쿨다운 동안 다시 요청하지 않는다", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const limiter = new ProviderRateLimiter();
+    const search = vi.fn(async () => {
+      throw new ProviderError("blocked");
+    });
+    const provider: PartProvider = {
+      id: "b",
+      displayName: "B",
+      kind: "broker",
+      rateLimit: { blockCooldownMs: 60_000 },
+      search,
+    };
+    await runLimited("A", [provider], limiter);
+    const results = await runLimited("B", [provider], limiter);
+    expect(results[0]).toMatchObject({ status: "unavailable", reason: "blocked" });
+    expect(search).toHaveBeenCalledTimes(1);
+  });
+
+  it("결과에 소스 분류(kind)를 붙인다", async () => {
+    const broker: PartProvider = { id: "x", displayName: "X", kind: "broker", search: async () => [] };
+    expect((await runLimited("A", [broker], new ProviderRateLimiter()))[0].kind).toBe("broker");
   });
 });

@@ -82,6 +82,7 @@ describe("소싱 강조 조건: 경계 케이스", () => {
   };
   const ok = (offers: Offer[]): ProviderResult => ({
     status: "ok",
+    kind: "authorized",
     providerId: "p",
     providerName: "P",
     offers,
@@ -95,6 +96,7 @@ describe("소싱 강조 조건: 경계 케이스", () => {
   it("모든 Provider 조회 실패는 '결과 없음'으로 보지 않는다", () => {
     const failed: ProviderResult = {
       status: "unavailable",
+      kind: "authorized",
       providerId: "p",
       providerName: "P",
       reason: "error",

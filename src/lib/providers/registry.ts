@@ -22,11 +22,24 @@ const entries: ProviderEntry[] = [
   },
   {
     enabled: providerFlags.mouser,
-    create: () => new NotImplementedProvider("mouser", "Mouser"),
+    create: () => new NotImplementedProvider("mouser", "Mouser", "authorized"),
   },
   {
     enabled: providerFlags.digikey,
-    create: () => new NotImplementedProvider("digikey", "DigiKey"),
+    create: () => new NotImplementedProvider("digikey", "DigiKey", "authorized"),
+  },
+  // TODO(확인필요): 아래 소스의 broker 분류. 저장된 HTML fixture로 파서 구현 후 교체
+  {
+    enabled: providerFlags.heisener,
+    create: () => new NotImplementedProvider("heisener", "Heisener", "broker"),
+  },
+  {
+    enabled: providerFlags.censtry,
+    create: () => new NotImplementedProvider("censtry", "Censtry", "broker"),
+  },
+  {
+    enabled: providerFlags.worldway,
+    create: () => new NotImplementedProvider("worldway", "Worldway Electronics", "broker"),
   },
 ];
 

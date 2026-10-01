@@ -1,4 +1,5 @@
 import { providerTimeoutMs, searchCacheTtlSeconds } from "@/lib/config";
+import { ProviderRateLimiter } from "@/lib/providers/rate-limiter";
 import { getEnabledProviders } from "@/lib/providers/registry";
 import {
   ProviderError,
@@ -12,14 +13,19 @@ import { TtlCache } from "@/lib/search/cache";
 export interface SearchOptions {
   providers?: PartProvider[];
   cache?: TtlCache<ProviderResult>;
+  limiter?: ProviderRateLimiter;
   now?: () => Date;
   timeoutMs?: number;
   cacheTtlSeconds?: number;
 }
 
-// 개발 서버 HMR에서도 캐시가 유지되도록 globalThis에 둔다.
-const globalForCache = globalThis as unknown as { __searchCache?: TtlCache<ProviderResult> };
-const defaultCache = (globalForCache.__searchCache ??= new TtlCache<ProviderResult>());
+// 개발 서버 HMR에서도 캐시·호출 제한 상태가 유지되도록 globalThis에 둔다.
+const g = globalThis as unknown as {
+  __searchCache?: TtlCache<ProviderResult>;
+  __providerLimiter?: ProviderRateLimiter;
+};
+const defaultCache = (g.__searchCache ??= new TtlCache<ProviderResult>());
+const defaultLimiter = (g.__providerLimiter ??= new ProviderRateLimiter());
 
 /**
  * 활성화된 모든 Provider를 병렬 조회한다.
@@ -28,6 +34,7 @@ const defaultCache = (globalForCache.__searchCache ??= new TtlCache<ProviderResu
 export async function searchParts(query: SearchQuery, options: SearchOptions = {}): Promise<ProviderResult[]> {
   const providers = options.providers ?? getEnabledProviders();
   const cache = options.cache ?? defaultCache;
+  const limiter = options.limiter ?? defaultLimiter;
   const now = options.now ?? (() => new Date());
   const timeoutMs = options.timeoutMs ?? providerTimeoutMs();
   const ttl = options.cacheTtlSeconds ?? searchCacheTtlSeconds();
@@ -40,7 +47,16 @@ export async function searchParts(query: SearchQuery, options: SearchOptions = {
       const cached = cache.get(key);
       if (cached) return cached;
 
+      const base = { providerId: provider.id, providerName: provider.displayName, kind: provider.kind };
+      const acquired = limiter.tryAcquire(provider.id, provider.rateLimit);
+      if (!acquired.ok) {
+        return { status: "unavailable", ...base, reason: acquired.reason, fetchedAt: now().toISOString() };
+      }
+
       const result = await queryProvider(provider, query, now, timeoutMs);
+      if (result.status === "unavailable" && result.reason === "blocked") {
+        limiter.reportBlocked(provider.id, provider.rateLimit);
+      }
       // 실패 결과는 캐시하지 않는다.
       if (result.status !== "unavailable") cache.set(key, result, ttl);
       return result;
@@ -54,7 +70,7 @@ async function queryProvider(
   now: () => Date,
   timeoutMs: number,
 ): Promise<ProviderResult> {
-  const base = { providerId: provider.id, providerName: provider.displayName };
+  const base = { providerId: provider.id, providerName: provider.displayName, kind: provider.kind };
   try {
     const offers = await withTimeout(provider.search(query), timeoutMs);
     const fetchedAt = now().toISOString();
@@ -63,7 +79,7 @@ async function queryProvider(
       status: "ok",
       ...base,
       fetchedAt,
-      offers: offers.map((o) => ({ ...o, ...base, fetchedAt })),
+      offers: offers.map((o) => ({ ...o, providerId: base.providerId, providerName: base.providerName, fetchedAt })),
     };
   } catch (err) {
     const reason: ProviderErrorReason = err instanceof ProviderError ? err.reason : "error";

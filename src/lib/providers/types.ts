@@ -7,6 +7,12 @@
 
 export type ProviderId = string;
 
+/**
+ * 소스 분류. 정식 유통사(A 영역) 결과에는 authorized만 표시하고 broker는 섞지 않는다.
+ * TODO(확인필요): 소스별 분류 기준 (예: LCSC는 브랜드별로 정식 여부가 다름)
+ */
+export type SourceKind = "authorized" | "broker";
+
 /** 수량 구간별 단가. minQty 이상 주문 시 unitPrice 적용. */
 export interface PriceBreak {
   minQty: number;
@@ -50,31 +56,37 @@ export type ProviderErrorReason =
   | "quota_exceeded"
   /** 타임아웃 */
   | "timeout"
+  /** 차단·CAPTCHA 응답 감지 (우회하지 않고 쿨다운) */
+  | "blocked"
+  /** robots.txt 등으로 수집이 허용되지 않음 */
+  | "disallowed"
   /** 그 외 오류 (네트워크, 응답 형식 등) */
   | "error";
 
+interface ProviderResultBase {
+  providerId: ProviderId;
+  providerName: string;
+  kind: SourceKind;
+  fetchedAt: string;
+}
+
 /** Provider 하나의 검색 결과. 결과 없음과 조회 실패를 구분한다. */
 export type ProviderResult =
-  | {
-      status: "ok";
-      providerId: ProviderId;
-      providerName: string;
-      offers: Offer[];
-      fetchedAt: string;
-    }
-  | {
-      status: "no_results";
-      providerId: ProviderId;
-      providerName: string;
-      fetchedAt: string;
-    }
-  | {
-      status: "unavailable";
-      providerId: ProviderId;
-      providerName: string;
-      reason: ProviderErrorReason;
-      fetchedAt: string;
-    };
+  | (ProviderResultBase & { status: "ok"; offers: Offer[] })
+  | (ProviderResultBase & { status: "no_results" })
+  | (ProviderResultBase & { status: "unavailable"; reason: ProviderErrorReason });
+
+/** 소스별 호출 제한. 값이 없는 항목은 제한하지 않는다. */
+export interface RateLimitPolicy {
+  /** 연속 요청 사이 최소 간격(ms) */
+  minIntervalMs?: number;
+  /** 1분당 최대 요청 수 */
+  perMinute?: number;
+  /** 하루 최대 요청 수 */
+  perDay?: number;
+  /** 차단 감지 후 쿨다운(ms) */
+  blockCooldownMs?: number;
+}
 
 /** 조회 실패를 Provider가 명시적으로 알릴 때 던지는 에러. */
 export class ProviderError extends Error {
@@ -88,13 +100,15 @@ export class ProviderError extends Error {
 }
 
 /**
- * 유통사 어댑터 인터페이스.
- * 데이터 수집은 각 유통사의 공식 API만 사용한다.
+ * 소스 어댑터 인터페이스.
+ * 수집 방법(API, 공개 웹페이지 등)은 제한하지 않되 docs/SPEC.md 3장의 수집 가드레일을 지킨다.
  */
 export interface PartProvider {
   readonly id: ProviderId;
-  /** 화면에 표시할 유통사명. 제휴·보증으로 보이는 문구는 넣지 않는다. */
+  /** 화면에 표시할 소스명. 제휴·보증으로 보이는 문구는 넣지 않는다. */
   readonly displayName: string;
+  readonly kind: SourceKind;
+  readonly rateLimit?: RateLimitPolicy;
   /**
    * 품번으로 검색한다. 결과가 없으면 빈 배열을 돌려준다.
    * 조회 실패는 ProviderError(또는 일반 Error)를 던진다.

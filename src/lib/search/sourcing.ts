@@ -22,7 +22,9 @@ const DISCONTINUED: ReadonlySet<Offer["lifecycle"]> = new Set(["nrnd", "eol", "o
  * 브로커 소싱 문의 강조 조건 판정.
  * 이 결과는 C 영역의 강조 여부에만 쓰이며, 정식 유통사 결과(A)의 순서·표시에는 영향을 주지 않는다.
  */
-export function evaluateSourcingSignals(results: ProviderResult[], qty: number | null): SourcingSignals {
+export function evaluateSourcingSignals(allResults: ProviderResult[], qty: number | null): SourcingSignals {
+  // 판정은 정식 유통사(authorized) 결과만으로 한다.
+  const results = allResults.filter((r) => r.kind === "authorized");
   const reasons: SourcingReason[] = [];
   const offers = results.flatMap((r) => (r.status === "ok" ? r.offers : []));
 

@@ -7,7 +7,9 @@ import { priceAtQty, sortOffersByPrice } from "@/lib/search/pricing";
  * 각 행은 하나의 유통사 데이터이며 출처(유통사명·조회 시각·상품 링크)를 함께 표시한다.
  * 정렬은 가격 순만 적용한다.
  */
-export function DistributorResults({ results, qty }: { results: ProviderResult[]; qty: number | null }) {
+export function DistributorResults({ results: allResults, qty }: { results: ProviderResult[]; qty: number | null }) {
+  // broker 소스 결과는 정식 유통사 영역에 섞지 않는다.
+  const results = allResults.filter((r) => r.kind === "authorized");
   const offers = sortOffersByPrice(
     results.flatMap((r) => (r.status === "ok" ? r.offers : [])),
     qty,

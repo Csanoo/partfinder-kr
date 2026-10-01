@@ -24,7 +24,7 @@ function offer(providerId: string, unitPrice: number, stock: number): Offer {
 }
 
 function ok(o: Offer): ProviderResult {
-  return { status: "ok", providerId: o.providerId, providerName: o.providerName, offers: [o], fetchedAt };
+  return { status: "ok", kind: "authorized", providerId: o.providerId, providerName: o.providerName, offers: [o], fetchedAt };
 }
 
 function render(results: ProviderResult[], qty: number | null = null) {
@@ -43,7 +43,7 @@ describe("결과 화면 A/B/C 영역", () => {
   });
 
   it("견적 문의(B)와 소싱 고지 문구는 결과가 있든 없든 항상 노출한다", () => {
-    const noResults: ProviderResult = { status: "no_results", providerId: "a", providerName: "Dist a", fetchedAt };
+    const noResults: ProviderResult = { status: "no_results", kind: "authorized", providerId: "a", providerName: "Dist a", fetchedAt };
     for (const results of [[ok(offer("a", 1, 10))], [noResults]]) {
       const html = render(results);
       expect(html).toContain("이 부품의 견적을 받아보세요.");
@@ -61,6 +61,15 @@ describe("결과 화면 A/B/C 영역", () => {
 
   it("강조 조건이 없으면 C는 강조하지 않는다", () => {
     expect(render([ok(offer("a", 1, 10))], 5)).toContain('data-emphasized="false"');
+  });
+
+  it("broker 소스 결과는 정식 유통사 영역(A)과 강조 판정에 섞지 않는다", () => {
+    const brokerOffer = { ...offer("brk", 0.01, 99999), providerName: "Broker Z" };
+    const broker: ProviderResult = { ...ok(brokerOffer), kind: "broker" };
+    const html = render([ok(offer("a", 1, 0)), broker], 10);
+    expect(html).not.toContain("Broker Z");
+    // authorized 재고가 모두 0이므로 broker 재고와 무관하게 강조
+    expect(html).toContain('data-emphasized="true"');
   });
 
   it("문의 링크에 품번과 수량을 넘긴다", () => {

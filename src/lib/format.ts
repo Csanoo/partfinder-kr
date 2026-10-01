@@ -42,5 +42,7 @@ export const unavailableLabel: Record<ProviderErrorReason, string> = {
   rate_limited: "일시 조회 불가 (호출 한도)",
   quota_exceeded: "일시 조회 불가 (일일 한도)",
   timeout: "일시 조회 불가 (응답 지연)",
+  blocked: "일시 조회 불가",
+  disallowed: "조회 불가",
   error: "일시 조회 불가",
 };
