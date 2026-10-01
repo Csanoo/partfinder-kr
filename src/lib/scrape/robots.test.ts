@@ -34,6 +34,23 @@ describe("parseRobots: hkinventory 실제 robots.txt", () => {
   });
 });
 
+describe("parseRobots: worldway 실제 robots.txt", () => {
+  const worldway = readFileSync(join(process.cwd(), "fixtures/robots/worldway.txt"), "utf8");
+  const robots = parseRobots(worldway, "partfinder-kr");
+
+  it("검색 페이지는 허용", () => {
+    expect(robots.isAllowed("/search?k=973061")).toBe(true);
+  });
+
+  it("/admin/ 은 금지", () => {
+    expect(robots.isAllowed("/admin/login")).toBe(false);
+  });
+
+  it("CCBot 등 지정 봇은 전체 금지", () => {
+    expect(parseRobots(worldway, "CCBot/2.0").isAllowed("/search?k=1")).toBe(false);
+  });
+});
+
 describe("parseRobots: 규칙 우선순위", () => {
   it("더 구체적인(긴) 규칙이 이긴다", () => {
     const r = parseRobots("User-agent: *\nDisallow: /p/\nAllow: /p/d/", "x");

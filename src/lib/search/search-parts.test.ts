@@ -33,7 +33,11 @@ describe("provider registry", () => {
   it("mock 플래그를 켜면 mock Provider만 켜진다", () => {
     vi.stubEnv("PROVIDER_MOUSER_ENABLED", "false");
     vi.stubEnv("PROVIDER_DIGIKEY_ENABLED", "false");
-    expect(mockProviders().map((p) => p.id)).toEqual(["mock-a", "mock-b"]);
+    expect(mockProviders().map((p) => [p.id, p.kind])).toEqual([
+      ["mock-a", "authorized"],
+      ["mock-b", "authorized"],
+      ["mock-broker", "broker"],
+    ]);
   });
 
   it("미구현 Provider는 플래그를 켜도 외부 호출 없이 조회 불가로 처리된다", async () => {
@@ -46,7 +50,7 @@ describe("provider registry", () => {
 
 describe("searchParts with mock fixtures", () => {
   it("Provider별로 결과를 분리하고 출처(유통사명·조회 시각·링크)를 붙인다", async () => {
-    const results = await run("mock-stock-ok", mockProviders());
+    const results = (await run("mock-stock-ok", mockProviders())).filter((r) => r.kind === "authorized");
     expect(results).toHaveLength(2);
     for (const r of results) {
       expect(r.status).toBe("ok");
@@ -61,13 +65,13 @@ describe("searchParts with mock fixtures", () => {
   });
 
   it("공백·소문자가 섞인 검색어도 정규화해서 찾는다", async () => {
-    const results = await run("  Mock-Stock-ok ", mockProviders());
+    const results = (await run("  Mock-Stock-ok ", mockProviders())).filter((r) => r.kind === "authorized");
     expect(results.every((r) => r.status === "ok")).toBe(true);
   });
 
   it("결과가 없으면 no_results", async () => {
     const results = await run("NOT-IN-FIXTURE", mockProviders());
-    expect(results.map((r) => r.status)).toEqual(["no_results", "no_results"]);
+    expect(results.map((r) => r.status)).toEqual(["no_results", "no_results", "no_results"]);
   });
 
   it("한 Provider가 실패해도 나머지는 정상 반환한다", async () => {

@@ -23,7 +23,12 @@ export function SearchResultSections({
       <DistributorResults results={results} qty={qty} />
       <div className="grid gap-4 md:grid-cols-2">
         <QuoteInquiryBox mpn={mpn} qty={qty} />
-        <SourcingInquiryBox mpn={mpn} qty={qty} signals={signals} />
+        <SourcingInquiryBox
+          mpn={mpn}
+          qty={qty}
+          signals={signals}
+          brokerResults={results.filter((r) => r.kind === "broker")}
+        />
       </div>
     </>
   );

@@ -63,11 +63,15 @@ describe("결과 화면 A/B/C 영역", () => {
     expect(render([ok(offer("a", 1, 10))], 5)).toContain('data-emphasized="false"');
   });
 
-  it("broker 소스 결과는 정식 유통사 영역(A)과 강조 판정에 섞지 않는다", () => {
+  it("broker 소스 결과는 A·강조 판정에 섞지 않고 소싱 박스(C) 안에만 표시한다", () => {
     const brokerOffer = { ...offer("brk", 0.01, 99999), providerName: "Broker Z" };
     const broker: ProviderResult = { ...ok(brokerOffer), kind: "broker" };
     const html = render([ok(offer("a", 1, 0)), broker], 10);
-    expect(html).not.toContain("Broker Z");
+    expect(html.indexOf("Broker Z")).toBeGreaterThan(html.indexOf('id="sourcing-inquiry-heading"'));
+    expect(html).toContain("99,999개 게시");
+    expect(html).toContain('href="https://example.com/brk/X-1"');
+    // 브로커 가격은 표시하지 않는다
+    expect(html).not.toContain("US$0.01");
     // authorized 재고가 모두 0이므로 broker 재고와 무관하게 강조
     expect(html).toContain('data-emphasized="true"');
   });

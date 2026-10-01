@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { inquiryHref } from "@/components/quote-inquiry-box";
+import { formatFetchedAt, formatInt } from "@/lib/format";
+import type { ProviderResult } from "@/lib/providers/types";
 import type { SourcingReason, SourcingSignals } from "@/lib/search/sourcing";
 
 export const SOURCING_DISCLAIMER =
@@ -20,10 +22,12 @@ export function SourcingInquiryBox({
   mpn,
   qty,
   signals,
+  brokerResults,
 }: {
   mpn: string;
   qty: number | null;
   signals: SourcingSignals;
+  brokerResults: ProviderResult[];
 }) {
   return (
     <section
@@ -53,6 +57,8 @@ export function SourcingInquiryBox({
 
       <p className="mb-3 text-xs text-zinc-700 dark:text-zinc-300">{SOURCING_DISCLAIMER}</p>
 
+      <BrokerListings results={brokerResults} />
+
       <Link
         href={inquiryHref("/inquiry/sourcing", mpn, qty)}
         className="inline-block rounded border border-zinc-400 px-3 py-1.5 text-sm dark:border-zinc-600"
@@ -60,5 +66,35 @@ export function SourcingInquiryBox({
         소싱 문의하기
       </Link>
     </section>
+  );
+}
+
+/**
+ * 시장 재고 참고 (broker 소스). 출처(소스명·조회 시각·링크)를 함께 표시한다.
+ * 가격은 표시하지 않는다. TODO(확인필요): 브로커 소스 가격 표시 여부
+ */
+function BrokerListings({ results }: { results: ProviderResult[] }) {
+  const offers = results.flatMap((r) => (r.status === "ok" ? r.offers : []));
+  if (offers.length === 0) return null;
+  return (
+    <div className="mb-3" data-testid="broker-listings">
+      <h3 className="mb-1 text-sm font-medium">시장 재고 참고</h3>
+      <p className="mb-2 text-xs text-zinc-600 dark:text-zinc-400">
+        브로커가 게시한 재고 정보로, 실제 재고·정품 여부는 확인되지 않았습니다.
+      </p>
+      <ul className="space-y-1 text-sm">
+        {offers.map((o) => (
+          <li key={`${o.providerId}:${o.productUrl}`} className="flex flex-wrap gap-x-2">
+            <span className="font-medium">{o.providerName}</span>
+            <span className="font-mono">{o.mpn}</span>
+            <span>{o.stock == null ? "수량 미기재" : `${formatInt(o.stock)}개 게시`}</span>
+            <span className="text-xs text-zinc-500">({formatFetchedAt(o.fetchedAt)})</span>
+            <a href={o.productUrl} target="_blank" rel="noopener noreferrer nofollow" className="text-xs underline">
+              출처
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

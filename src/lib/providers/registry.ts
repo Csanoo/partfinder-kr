@@ -2,6 +2,7 @@ import { providerFlags } from "@/lib/config";
 import { MockProvider, type MockFixture } from "@/lib/providers/mock/mock-provider";
 import mockAFixture from "@/lib/providers/mock/fixtures/mock-a.json";
 import mockBFixture from "@/lib/providers/mock/fixtures/mock-b.json";
+import mockBrokerFixture from "@/lib/providers/mock/fixtures/mock-broker.json";
 import { NotImplementedProvider } from "@/lib/providers/stub-provider";
 import type { PartProvider } from "@/lib/providers/types";
 
@@ -19,6 +20,10 @@ const entries: ProviderEntry[] = [
   {
     enabled: providerFlags.mock,
     create: () => new MockProvider("mock-b", "Mock 유통사 B", mockBFixture as MockFixture),
+  },
+  {
+    enabled: providerFlags.mock,
+    create: () => new MockProvider("mock-broker", "Mock 브로커", mockBrokerFixture as MockFixture, "broker"),
   },
   {
     enabled: providerFlags.mouser,

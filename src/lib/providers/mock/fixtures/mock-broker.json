@@ -1,0 +1,41 @@
+{
+  "MOCK-STOCK-ZERO": [
+    {
+      "manufacturer": "Mock Semiconductor",
+      "mpn": "MOCK-STOCK-ZERO",
+      "description": "[MOCK] 브로커 재고 게시",
+      "stock": 2500,
+      "priceBreaks": [],
+      "moq": null,
+      "currency": "USD",
+      "productUrl": "https://example.com/mock-broker/MOCK-STOCK-ZERO",
+      "lifecycle": "unknown"
+    }
+  ],
+  "MOCK-NRND": [
+    {
+      "manufacturer": "Mock Semiconductor",
+      "mpn": "MOCK-NRND",
+      "description": "[MOCK] 브로커 재고 게시",
+      "stock": 1800,
+      "priceBreaks": [],
+      "moq": null,
+      "currency": "USD",
+      "productUrl": "https://example.com/mock-broker/MOCK-NRND",
+      "lifecycle": "unknown"
+    }
+  ],
+  "MOCK-LOW-STOCK": [
+    {
+      "manufacturer": "Mock Semiconductor",
+      "mpn": "MOCK-LOW-STOCK",
+      "description": "[MOCK] 브로커 재고 게시",
+      "stock": null,
+      "priceBreaks": [],
+      "moq": null,
+      "currency": "USD",
+      "productUrl": "https://example.com/mock-broker/MOCK-LOW-STOCK",
+      "lifecycle": "unknown"
+    }
+  ]
+}
