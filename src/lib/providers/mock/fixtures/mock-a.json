@@ -1,0 +1,74 @@
+{
+  "MOCK-STOCK-OK": [
+    {
+      "manufacturer": "Mock Semiconductor",
+      "mpn": "MOCK-STOCK-OK",
+      "description": "[MOCK] 32-bit MCU, 64KB Flash, LQFP-48",
+      "stock": 5000,
+      "priceBreaks": [
+        { "minQty": 1, "unitPrice": 4.2 },
+        { "minQty": 10, "unitPrice": 3.8 },
+        { "minQty": 100, "unitPrice": 3.1 }
+      ],
+      "moq": 1,
+      "currency": "USD",
+      "productUrl": "https://example.com/mock-a/p/MOCK-STOCK-OK",
+      "lifecycle": "active"
+    }
+  ],
+  "MOCK-STOCK-ZERO": [
+    {
+      "manufacturer": "Mock Semiconductor",
+      "mpn": "MOCK-STOCK-ZERO",
+      "description": "[MOCK] LDO Regulator 3.3V, SOT-223",
+      "stock": 0,
+      "priceBreaks": [{ "minQty": 1, "unitPrice": 0.45 }],
+      "moq": 1,
+      "currency": "USD",
+      "productUrl": "https://example.com/mock-a/p/MOCK-STOCK-ZERO",
+      "lifecycle": "active"
+    }
+  ],
+  "MOCK-LOW-STOCK": [
+    {
+      "manufacturer": "Mock Semiconductor",
+      "mpn": "MOCK-LOW-STOCK",
+      "description": "[MOCK] CAN Transceiver, SOIC-8",
+      "stock": 30,
+      "priceBreaks": [
+        { "minQty": 1, "unitPrice": 1.9 },
+        { "minQty": 25, "unitPrice": 1.6 }
+      ],
+      "moq": 1,
+      "currency": "USD",
+      "productUrl": "https://example.com/mock-a/p/MOCK-LOW-STOCK",
+      "lifecycle": "active"
+    }
+  ],
+  "MOCK-NRND": [
+    {
+      "manufacturer": "Mock Semiconductor",
+      "mpn": "MOCK-NRND",
+      "description": "[MOCK] Op-Amp Dual, SOIC-8 (신규 설계 비권장)",
+      "stock": 300,
+      "priceBreaks": [{ "minQty": 1, "unitPrice": 0.8 }],
+      "moq": 1,
+      "currency": "USD",
+      "productUrl": "https://example.com/mock-a/p/MOCK-NRND",
+      "lifecycle": "nrnd"
+    }
+  ],
+  "MOCK-PARTIAL-ERROR": [
+    {
+      "manufacturer": "Mock Semiconductor",
+      "mpn": "MOCK-PARTIAL-ERROR",
+      "description": "[MOCK] EEPROM 256Kbit I2C, SOIC-8",
+      "stock": 800,
+      "priceBreaks": [{ "minQty": 1, "unitPrice": 0.6 }],
+      "moq": 1,
+      "currency": "USD",
+      "productUrl": "https://example.com/mock-a/p/MOCK-PARTIAL-ERROR",
+      "lifecycle": "active"
+    }
+  ]
+}
