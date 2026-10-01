@@ -185,13 +185,14 @@ model Part {
   createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt          DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  manufacturer  Manufacturer      @relation(fields: [manufacturerId], references: [id])
-  category      Category?         @relation(fields: [categoryId], references: [id])
-  slugs         PartSlug[]
-  variants      PartVariant[]
-  alternatives  PartAlternative[] @relation("PartAlternatives")
-  alternativeOf PartAlternative[] @relation("AlternativeTarget")
-  faqs          PartFaq[]
+  manufacturer     Manufacturer      @relation(fields: [manufacturerId], references: [id])
+  category         Category?         @relation(fields: [categoryId], references: [id])
+  slugs            PartSlug[]
+  variants         PartVariant[]
+  alternatives     PartAlternative[] @relation("PartAlternatives")
+  alternativeOf    PartAlternative[] @relation("AlternativeTarget")
+  faqs             PartFaq[]
+  manufacturerFact ManufacturerFact?
 
   @@unique([manufacturerId, mpnKey])
   @@index([pageStatus, indexable])
@@ -275,4 +276,32 @@ model PartFaq {
 
   @@index([partId, published])
   @@map("part_faq")
+}
+
+// ───────────── 제조사 공식 정보 수집 결과 (관리자 검토 대기) ─────────────
+
+enum FactStatus {
+  pending
+  applied
+  dismissed
+  not_found
+  failed
+}
+
+/// 부품별 최신 조회 결과 1건. 관리자가 반영(applied)하거나 무시(dismissed)한다
+model ManufacturerFact {
+  id        String     @id @default(uuid()) @db.Uuid
+  partId    String     @unique @map("part_id") @db.Uuid
+  sourceId  String     @map("source_id")
+  status    FactStatus
+  /// ManufacturerFacts JSON (사실 정보만)
+  facts     Json?
+  message   String?
+  fetchedAt DateTime   @map("fetched_at") @db.Timestamptz(3)
+  updatedAt DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  part Part @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("manufacturer_fact")
 }

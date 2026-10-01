@@ -22,8 +22,10 @@ import {
   setPageStatus,
   updatePart,
 } from "@/lib/parts/admin";
-import { buildProposals, mergeSpecs, type Proposal } from "@/lib/manufacturer/proposals";
-import { fetchManufacturerFacts, sourceForManufacturer } from "@/lib/manufacturer/registry";
+import type { Prisma } from "@/generated/prisma/client";
+import { applyFacts } from "@/lib/manufacturer/apply";
+import { buildProposals, type Proposal, type ProposalField } from "@/lib/manufacturer/proposals";
+import { fetchManufacturerFacts } from "@/lib/manufacturer/registry";
 import type { ManufacturerFacts } from "@/lib/manufacturer/types";
 import { planImport, type ImportPlan } from "@/lib/parts/import-plan";
 import { slugifyName } from "@/lib/parts/slug";
@@ -304,6 +306,11 @@ export async function fetchFactsAction(partId: string): Promise<FactsState> {
   const r = await fetchManufacturerFacts(part.manufacturer.slug, part.mpnDisplay);
   if (r.status === "not_found") return { status: "not_found", message: `제조사 사이트에서 ${part.mpnDisplay} 를 찾지 못했습니다.` };
   if (r.status === "unavailable") return { status: "unavailable", message: UNAVAILABLE_TEXT[r.reason] ?? `조회 실패 (${r.reason})` };
+  await db().manufacturerFact.upsert({
+    where: { partId },
+    create: { partId, sourceId: part.manufacturer.slug, status: "pending", facts: r.facts as unknown as Prisma.InputJsonValue, fetchedAt: new Date() },
+    update: { status: "pending", facts: r.facts as unknown as Prisma.InputJsonValue, message: null, fetchedAt: new Date() },
+  });
   return {
     status: "ok",
     facts: r.facts,
@@ -311,7 +318,7 @@ export async function fetchFactsAction(partId: string): Promise<FactsState> {
   };
 }
 
-/** 관리자가 체크한 항목만 반영. facts 는 직전 조회 결과(관리자 세션에서 받은 값)를 다시 검증해서 쓴다 */
+/** 관리자가 체크한 항목만 반영. facts 는 직전 조회 결과(관리자 세션에서 받은 값)이며 applyFacts 에서 다시 검증한다 */
 export async function applyFactsAction(partId: string, _prev: FactsState, fd: FormData): Promise<FactsState> {
   await requireAdmin();
   let facts: ManufacturerFacts;
@@ -320,27 +327,13 @@ export async function applyFactsAction(partId: string, _prev: FactsState, fd: Fo
   } catch {
     return { status: "unavailable", message: "조회 결과가 올바르지 않습니다. 다시 가져와 주세요." };
   }
-  const selected = new Set(fd.getAll("fields").filter((v): v is string => typeof v === "string"));
-  const { part, keySpecs } = await currentFacts(partId);
-  const lifecycle = parseLifecycle(facts.lifecycle ?? "");
-  const datasheet = validateDatasheetUrl(facts.datasheetUrl ?? "");
-  const source = validateDatasheetUrl(facts.sourceUrl ?? ""); // 출처도 제조사 공식 https 여야 함
-  if (!source.ok || !sourceForManufacturer(part.manufacturer.slug)) {
-    return { status: "unavailable", message: "출처가 제조사 공식 URL이 아닙니다." };
+  const selected = new Set(fd.getAll("fields").filter((v): v is ProposalField => typeof v === "string"));
+  try {
+    const { applied } = await applyFacts(partId, facts, selected);
+    await db().manufacturerFact.updateMany({ where: { partId, status: "pending" }, data: { status: "applied" } });
+    revalidatePath(`/admin/parts/${partId}`);
+    return { status: "applied", message: `${applied}개 항목을 반영했습니다. 페이지를 새로 고치면 편집 칸에 보입니다.` };
+  } catch (err) {
+    return { status: "unavailable", message: err instanceof Error ? err.message : "반영 실패" };
   }
-  const checkedAt = parseDateOnly((facts.fetchedAt ?? "").slice(0, 10));
-
-  await updatePart(partId, {
-    categoryId: part.categoryId,
-    summaryKo: part.summaryKo,
-    eolDate: part.eolDate,
-    package: selected.has("package") && facts.package ? facts.package.slice(0, 40) : part.package,
-    datasheetUrl: selected.has("datasheetUrl") && datasheet.ok && datasheet.url ? datasheet.url : part.datasheetUrl,
-    keySpecs: selected.has("specs") ? mergeSpecs(keySpecs, (facts.specs ?? []).slice(0, 20)) : keySpecs,
-    ...(selected.has("lifecycle") && lifecycle && lifecycle !== "unknown" && checkedAt.ok
-      ? { lifecycleStatus: lifecycle, lifecycleCheckedAt: checkedAt.date, lifecycleSource: source.url }
-      : { lifecycleStatus: part.lifecycleStatus, lifecycleCheckedAt: part.lifecycleCheckedAt, lifecycleSource: part.lifecycleSource }),
-  });
-  revalidatePath(`/admin/parts/${partId}`);
-  return { status: "applied", message: `${selected.size}개 항목을 반영했습니다. 페이지를 새로 고치면 편집 칸에 보입니다.` };
 }

@@ -7,6 +7,7 @@ const nav = [
   { href: "/admin/parts", label: "부품" },
   { href: "/admin/parts/new", label: "부품 등록" },
   { href: "/admin/parts/import", label: "CSV 가져오기" },
+  { href: "/admin/facts", label: "제조사 정보 검토" },
   { href: "/admin/taxonomy", label: "제조사·카테고리" },
 ];
 

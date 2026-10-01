@@ -14,6 +14,10 @@ const POLICY = { perMinute: 20, perDay: 500, blockCooldownMs: 60 * 60_000 };
 const g = globalThis as unknown as { __mfrLimiter?: ProviderRateLimiter };
 const limiter = (g.__mfrLimiter ??= new ProviderRateLimiter());
 
+export function supportedManufacturerSlugs(): string[] {
+  return sources.flatMap((s) => s.manufacturerSlugs);
+}
+
 export function sourceForManufacturer(manufacturerSlug: string): ManufacturerSource | null {
   return sources.find((s) => s.manufacturerSlugs.includes(manufacturerSlug)) ?? null;
 }
