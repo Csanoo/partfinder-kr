@@ -1,0 +1,99 @@
+// 데이터 모델: docs/SPEC.md 7장
+// 수집한 가격·재고는 저장하지 않는다 (장기 보관 부품 DB 금지). 검색 로그와 문의만 저장한다.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum InquiryType {
+  quote
+  sourcing
+}
+
+/// 이번 구매 품목 수 (BOM 수요 검증용)
+enum ItemCountBucket {
+  one
+  two_to_ten
+  eleven_plus
+}
+
+enum PurchaseType {
+  company
+  personal
+}
+
+enum InquiryStatus {
+  new
+  contacted
+  quoted
+  won
+  lost
+}
+
+enum NotifyStatus {
+  pending
+  sent
+  failed
+}
+
+model SearchLog {
+  id                    String   @id @default(uuid()) @db.Uuid
+  queryRaw              String   @map("query_raw")
+  queryNormalized       String   @map("query_normalized")
+  qty                   Int?
+  /// { providerId: 결과 수 | null(조회 불가) }
+  resultCountByProvider Json     @map("result_count_by_provider")
+  hasAnyStock           Boolean  @map("has_any_stock")
+  /// 익명 세션 ID (쿠키). 개인 식별 정보 아님
+  sessionId             String?  @map("session_id")
+  /// 검색이 일어난 화면: search(/search) | part(/part/[mpn])
+  source                String   @default("search")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  inquiries Inquiry[]
+
+  @@index([createdAt])
+  @@index([queryNormalized])
+  @@map("search_log")
+}
+
+model Inquiry {
+  id                 String          @id @default(uuid()) @db.Uuid
+  type               InquiryType
+  mpn                String
+  qty                Int
+  /// 희망 납기. null 이고 dueNegotiable=true 면 "협의"
+  dueDate            DateTime?       @map("due_date") @db.Date
+  dueNegotiable      Boolean         @default(false) @map("due_negotiable")
+  itemCountBucket    ItemCountBucket @map("item_count_bucket")
+  purchaseType       PurchaseType    @map("purchase_type")
+  company            String?
+  /// 개인정보 (보유기간 경과 시 삭제 대상)
+  contactName        String?         @map("contact_name")
+  phone              String?
+  email              String?
+  memo               String?
+  consentPrivacy     Boolean         @map("consent_privacy")
+  /// 소싱 문의만 필수, 견적 문의는 null
+  consentThirdParty  Boolean?        @map("consent_third_party")
+  consentTextVersion String          @map("consent_text_version")
+  searchLogId        String?         @map("search_log_id") @db.Uuid
+  status             InquiryStatus   @default(new)
+  notifyStatus       NotifyStatus    @default(pending) @map("notify_status")
+  /// 개인정보 파기 시각 (파기 배치가 기록)
+  personalDataPurgedAt DateTime?     @map("personal_data_purged_at") @db.Timestamptz(3)
+  createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  searchLog SearchLog? @relation(fields: [searchLogId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([type, status])
+  @@index([notifyStatus])
+  @@map("inquiry")
+}

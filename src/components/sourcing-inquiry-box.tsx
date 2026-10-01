@@ -23,11 +23,13 @@ export function SourcingInquiryBox({
   qty,
   signals,
   brokerResults,
+  searchLogId = null,
 }: {
   mpn: string;
   qty: number | null;
   signals: SourcingSignals;
   brokerResults: ProviderResult[];
+  searchLogId?: string | null;
 }) {
   return (
     <section
@@ -60,7 +62,7 @@ export function SourcingInquiryBox({
       <BrokerListings results={brokerResults} />
 
       <Link
-        href={inquiryHref("/inquiry/sourcing", mpn, qty)}
+        href={inquiryHref("/inquiry/sourcing", mpn, qty, searchLogId)}
         className="inline-block rounded border border-zinc-400 px-3 py-1.5 text-sm dark:border-zinc-600"
       >
         소싱 문의하기

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 /** B. 견적 문의. 결과와 관계없이 항상 노출하며 중립적인 문구만 쓴다. */
-export function QuoteInquiryBox({ mpn, qty }: { mpn: string; qty: number | null }) {
+export function QuoteInquiryBox({ mpn, qty, searchLogId = null }: { mpn: string; qty: number | null; searchLogId?: string | null }) {
   return (
     <section
       aria-labelledby="quote-inquiry-heading"
@@ -12,7 +12,7 @@ export function QuoteInquiryBox({ mpn, qty }: { mpn: string; qty: number | null 
       </h2>
       <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">이 부품의 견적을 받아보세요.</p>
       <Link
-        href={inquiryHref("/inquiry/quote", mpn, qty)}
+        href={inquiryHref("/inquiry/quote", mpn, qty, searchLogId)}
         className="inline-block rounded border border-zinc-400 px-3 py-1.5 text-sm dark:border-zinc-600"
       >
         견적 문의하기
@@ -21,8 +21,9 @@ export function QuoteInquiryBox({ mpn, qty }: { mpn: string; qty: number | null 
   );
 }
 
-export function inquiryHref(path: string, mpn: string, qty: number | null): string {
+export function inquiryHref(path: string, mpn: string, qty: number | null, searchLogId: string | null = null): string {
   const params = new URLSearchParams({ mpn });
   if (qty != null) params.set("qty", String(qty));
+  if (searchLogId) params.set("sl", searchLogId);
   return `${path}?${params.toString()}`;
 }

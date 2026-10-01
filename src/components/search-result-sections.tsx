@@ -12,22 +12,25 @@ export function SearchResultSections({
   results,
   mpn,
   qty,
+  searchLogId = null,
 }: {
   results: ProviderResult[];
   mpn: string;
   qty: number | null;
+  searchLogId?: string | null;
 }) {
   const signals = evaluateSourcingSignals(results, qty);
   return (
     <>
       <DistributorResults results={results} qty={qty} />
       <div className="grid gap-4 md:grid-cols-2">
-        <QuoteInquiryBox mpn={mpn} qty={qty} />
+        <QuoteInquiryBox mpn={mpn} qty={qty} searchLogId={searchLogId} />
         <SourcingInquiryBox
           mpn={mpn}
           qty={qty}
           signals={signals}
           brokerResults={results.filter((r) => r.kind === "broker")}
+          searchLogId={searchLogId}
         />
       </div>
     </>

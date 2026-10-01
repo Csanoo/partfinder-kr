@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
+import { prismaSearchLogRepo } from "@/lib/repos";
+import { logSearch } from "@/lib/search/search-log";
+import { SESSION_HEADER } from "@/proxy";
 import { SearchForm } from "@/components/search-form";
 import { partPath } from "@/lib/seo/part-url";
 import { SearchResultSections } from "@/components/search-result-sections";
@@ -23,8 +27,20 @@ export default async function SearchPage(props: PageProps<"/search">) {
   const query = toSearchQuery(rawQuery);
   const qty = parseQty(rawQty);
 
-  // TODO: search_log 저장은 DB 연결(3단계)과 함께 추가
   const results = query.normalized === "" ? null : await searchParts(query);
+
+  let searchLogId: string | null = null;
+  if (results != null) {
+    const h = await headers();
+    searchLogId = await logSearch(prismaSearchLogRepo, {
+      query,
+      qty,
+      results,
+      sessionId: h.get(SESSION_HEADER),
+      userAgent: h.get("user-agent"),
+      source: "search",
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -39,7 +55,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
               <span className="font-mono">{query.normalized}</span> 품번 페이지
             </Link>
           </p>
-          <SearchResultSections results={results} mpn={rawQuery.trim()} qty={qty} />
+          <SearchResultSections results={results} mpn={rawQuery.trim()} qty={qty} searchLogId={searchLogId} />
         </>
       )}
     </div>
