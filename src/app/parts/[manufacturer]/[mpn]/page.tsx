@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { isBot } from "@/lib/search/search-log";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { submitSourcingInquiry } from "@/app/inquiry/actions";
@@ -37,13 +39,15 @@ export default async function PartPage(props: PageProps<"/parts/[manufacturer]/[
   const { manufacturer, mpn } = await props.params;
   const part = await load(manufacturer, mpn);
   if (part == null) notFound();
+  // 알려진 검색엔진 봇에는 유통사 조회를 하지 않는다 (SEO_SPEC 6.4, Mouser 일일 쿼터 보호)
+  const bot = isBot((await headers()).get("user-agent"));
 
   return (
     <>
       <JsonLd data={buildJsonLd(part, site.url)} />
       <PartDetail
         part={part}
-        availability={<AvailabilityPanel mpn={part.mpnDisplay} />}
+        availability={<AvailabilityPanel mpn={part.mpnDisplay} isBot={bot} />}
         sourcingForm={
           <InquiryForm
             type="sourcing"
