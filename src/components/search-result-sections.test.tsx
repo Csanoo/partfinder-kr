@@ -51,12 +51,12 @@ describe("결과 화면 A/B/C 영역", () => {
     }
   });
 
-  it("강조 조건에 해당하면 C만 강조되고, A의 가격 순서는 그대로다", () => {
-    // 재고 0 → 소싱 강조. A는 여전히 가격 순 (b=1.0 → a=2.0)
+  it("강조 조건에 해당하면 C만 강조되고, A의 순서(유통사명 순)는 그대로다", () => {
+    // 재고 0 → 소싱 강조. A는 유통사명 순 (Dist a → Dist b)
     const html = render([ok(offer("a", 2, 0)), ok(offer("b", 1, 0))]);
     expect(html).toContain('data-emphasized="true"');
-    expect(html.indexOf("Dist b")).toBeLessThan(html.indexOf("Dist a"));
-    expect(html.indexOf("Dist a")).toBeLessThan(html.indexOf('id="quote-inquiry-heading"'));
+    expect(html.indexOf("Dist a")).toBeLessThan(html.indexOf("Dist b"));
+    expect(html.indexOf("Dist b")).toBeLessThan(html.indexOf('id="quote-inquiry-heading"'));
   });
 
   it("강조 조건이 없으면 C는 강조하지 않는다", () => {
@@ -74,6 +74,11 @@ describe("결과 화면 A/B/C 영역", () => {
     expect(html).not.toContain("US$0.01");
     // authorized 재고가 모두 0이므로 broker 재고와 무관하게 강조
     expect(html).toContain('data-emphasized="true"');
+  });
+
+  it("가격은 어디에도 표시하지 않는다", () => {
+    const html = render([ok(offer("a", 1.23, 10))], 5);
+    expect(html).not.toMatch(/US\$|단가|합계|가격/);
   });
 
   it("문의 링크에 품번과 수량을 넘긴다", () => {

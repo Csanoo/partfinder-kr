@@ -13,6 +13,17 @@ npm run dev            # http://localhost:3000
 개발 환경에서는 mock Provider(`PROVIDER_MOCK_ENABLED=true`)와 fixture JSON만 사용한다.
 실제 유통사 Provider는 모두 기본 비활성이며 feature flag로만 켠다.
 
+## 로컬 DB
+
+프로젝트 안의 개발 전용 PostgreSQL 18 클러스터(`.pgdata`, 포트 5434)를 쓴다. 접속 정보는 `.env`의 `DATABASE_URL`.
+
+```bash
+npm run db:start     # 개발 DB 실행 (재부팅 후 한 번)
+npm run db:migrate   # 스키마 변경 반영
+```
+
+처음 만들 때(이미 만들어져 있으면 생략): `initdb -D .pgdata -U partfinder --auth=scram-sha-256 --pwfile=<비밀번호 파일>` 후 `.env`에 `DATABASE_URL="postgresql://partfinder:<비밀번호>@localhost:5434/partfinder"`.
+
 ## 스크립트
 
 | 명령 | 설명 |

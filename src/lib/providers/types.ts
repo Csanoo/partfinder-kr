@@ -1,7 +1,7 @@
 /**
  * 유통사 Provider 공통 타입.
  *
- * 모든 가격·재고 데이터는 어느 유통사에서 언제 조회했는지(출처)를 함께 가진다.
+ * 모든 재고 데이터는 어느 유통사에서 언제 조회했는지(출처)를 함께 가진다.
  * 서로 다른 Provider의 데이터는 합치지 않고 Provider 단위로 따로 다룬다.
  */
 
@@ -13,7 +13,7 @@ export type ProviderId = string;
  */
 export type SourceKind = "authorized" | "broker";
 
-/** 수량 구간별 단가. minQty 이상 주문 시 unitPrice 적용. */
+/** 수량 구간별 단가. Provider가 돌려주더라도 화면·저장 어디에도 쓰지 않는다 (가격 미표시 결정). */
 export interface PriceBreak {
   minQty: number;
   unitPrice: number;

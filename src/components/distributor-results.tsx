@@ -1,21 +1,20 @@
 import { PackageIllustration } from "@/components/package-illustration";
 import { parsePackage } from "@/lib/package/parse-package";
-import { formatFetchedAt, formatInt, formatMoney, lifecycleLabel, unavailableLabel } from "@/lib/format";
+import { formatFetchedAt, formatInt, lifecycleLabel, unavailableLabel } from "@/lib/format";
 import type { Offer, ProviderResult } from "@/lib/providers/types";
-import { priceAtQty, sortOffersByPrice } from "@/lib/search/pricing";
 
 /**
  * A. 정식 유통사 결과.
  * 각 행은 하나의 유통사 데이터이며 출처(유통사명·조회 시각·상품 링크)를 함께 표시한다.
- * 정렬은 가격 순만 적용한다.
+ * 가격은 표시하지 않는다 (결정 2026-10-01).
+ *
+ * 정렬: 유통사명 순. 가중치·숨김 없음.
+ * TODO(확인필요): 가격 미표시 이후의 정렬 기준 (기존 명세는 가격 순)
  */
-export function DistributorResults({ results: allResults, qty }: { results: ProviderResult[]; qty: number | null }) {
+export function DistributorResults({ results: allResults }: { results: ProviderResult[]; qty?: number | null }) {
   // broker 소스 결과는 정식 유통사 영역에 섞지 않는다.
   const results = allResults.filter((r) => r.kind === "authorized");
-  const offers = sortOffersByPrice(
-    results.flatMap((r) => (r.status === "ok" ? r.offers : [])),
-    qty,
-  );
+  const offers = sortOffersByProvider(results.flatMap((r) => (r.status === "ok" ? r.offers : [])));
   const statusRows = results.filter((r) => r.status !== "ok");
 
   return (
@@ -30,23 +29,21 @@ export function DistributorResults({ results: allResults, qty }: { results: Prov
         <>
           {offers.length > 0 && (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[960px] border-collapse text-sm">
+              <table className="w-full min-w-[760px] border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-zinc-300 text-left dark:border-zinc-700">
                     <th className="p-2">유통사</th>
                     <th className="p-2">제조사 / 품번</th>
                     <th className="p-2">설명</th>
                     <th className="p-2 text-right">재고</th>
-                    <th className="p-2">가격 구간</th>
                     <th className="p-2 text-right">MOQ</th>
-                    {qty != null && <th className="p-2 text-right">{formatInt(qty)}개 기준</th>}
                     <th className="p-2">조회 시각</th>
                     <th className="p-2">링크</th>
                   </tr>
                 </thead>
                 <tbody>
                   {offers.map((offer) => (
-                    <OfferRow key={`${offer.providerId}:${offer.productUrl}`} offer={offer} qty={qty} />
+                    <OfferRow key={`${offer.providerId}:${offer.productUrl}`} offer={offer} />
                   ))}
                 </tbody>
               </table>
@@ -70,8 +67,15 @@ export function DistributorResults({ results: allResults, qty }: { results: Prov
   );
 }
 
-function OfferRow({ offer, qty }: { offer: Offer; qty: number | null }) {
-  const breaks = [...offer.priceBreaks].sort((a, b) => a.minQty - b.minQty);
+/** 유통사명 순 (같으면 원래 순서 유지). */
+export function sortOffersByProvider<T extends Pick<Offer, "providerName">>(offers: T[]): T[] {
+  return offers
+    .map((offer, index) => ({ offer, index }))
+    .sort((a, b) => a.offer.providerName.localeCompare(b.offer.providerName, "ko") || a.index - b.index)
+    .map((x) => x.offer);
+}
+
+function OfferRow({ offer }: { offer: Offer }) {
   return (
     <tr className="border-b border-zinc-200 align-top dark:border-zinc-800">
       <td className="p-2 font-medium">{offer.providerName}</td>
@@ -89,25 +93,7 @@ function OfferRow({ offer, qty }: { offer: Offer; qty: number | null }) {
         </div>
       </td>
       <td className="p-2 text-right">{offer.stock == null ? "-" : formatInt(offer.stock)}</td>
-      <td className="p-2">
-        {breaks.length === 0 ? (
-          "-"
-        ) : (
-          <ul>
-            {breaks.map((b) => (
-              <li key={b.minQty}>
-                {formatInt(b.minQty)}+ : {formatMoney(b.unitPrice, offer.currency)}
-              </li>
-            ))}
-          </ul>
-        )}
-      </td>
       <td className="p-2 text-right">{offer.moq == null ? "-" : formatInt(offer.moq)}</td>
-      {qty != null && (
-        <td className="p-2 text-right">
-          <QtyPriceCell offer={offer} qty={qty} />
-        </td>
-      )}
       <td className="p-2 whitespace-nowrap">{formatFetchedAt(offer.fetchedAt)}</td>
       <td className="p-2">
         <a href={offer.productUrl} target="_blank" rel="noopener noreferrer nofollow" className="underline">
@@ -115,17 +101,5 @@ function OfferRow({ offer, qty }: { offer: Offer; qty: number | null }) {
         </a>
       </td>
     </tr>
-  );
-}
-
-function QtyPriceCell({ offer, qty }: { offer: Offer; qty: number }) {
-  const p = priceAtQty(offer, qty);
-  if (p.status === "no_price") return <>-</>;
-  if (p.status === "below_min") return <span className="text-xs">최소 {formatInt(p.minQty)}개</span>;
-  return (
-    <>
-      <div>단가 {formatMoney(p.unitPrice, offer.currency)}</div>
-      <div className="font-medium">합계 {formatMoney(p.total, offer.currency)}</div>
-    </>
   );
 }

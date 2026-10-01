@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import Link from "next/link";
 import { prismaSearchLogRepo } from "@/lib/repos";
 import { logSearch } from "@/lib/search/search-log";
 import { SESSION_HEADER } from "@/proxy";
 import { SearchForm } from "@/components/search-form";
-import { partPath } from "@/lib/seo/part-url";
 import { SearchResultSections } from "@/components/search-result-sections";
 import { parseQty, toSearchQuery } from "@/lib/search/normalize";
 import { searchParts } from "@/lib/search/search-parts";
 
-// 검색 결과 페이지는 색인하지 않는다 (품번 페이지 /part/[mpn] 가 색인 대상).
+// 검색 결과 페이지는 항상 색인하지 않는다 (SEO 명세 제약 2).
 export const metadata: Metadata = {
   title: "검색 결과",
   robots: { index: false, follow: true },
@@ -49,14 +47,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
       {results == null ? (
         <p className="text-zinc-600 dark:text-zinc-400">품번을 입력해 주세요.</p>
       ) : (
-        <>
-          <p className="text-sm">
-            <Link href={partPath(rawQuery)} className="underline">
-              <span className="font-mono">{query.normalized}</span> 품번 페이지
-            </Link>
-          </p>
-          <SearchResultSections results={results} mpn={rawQuery.trim()} qty={qty} searchLogId={searchLogId} />
-        </>
+        <SearchResultSections results={results} mpn={rawQuery.trim()} qty={qty} searchLogId={searchLogId} />
       )}
     </div>
   );

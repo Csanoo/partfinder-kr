@@ -14,18 +14,6 @@ export function formatFetchedAt(iso: string): string {
   return dateTimeFormat.format(new Date(iso));
 }
 
-export function formatMoney(amount: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat("ko-KR", {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 4,
-    }).format(amount);
-  } catch {
-    return `${amount} ${currency}`;
-  }
-}
-
 export function formatInt(n: number): string {
   return new Intl.NumberFormat("ko-KR").format(n);
 }
