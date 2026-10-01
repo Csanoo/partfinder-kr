@@ -11,19 +11,25 @@ interface Props {
   action: Action;
   defaults: { mpn: string; qty: string; searchLogId: string };
   consent: { privacy: string; thirdParty: string };
+  /** 좁은 영역(부품 페이지 사이드바)용: 한 열 배치, 테두리 없음 */
+  compact?: boolean;
 }
 
 const input =
   "w-full rounded-lg border border-line bg-surface px-3 py-2 outline-none focus-visible:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-200 dark:focus-visible:ring-brand-800 aria-[invalid=true]:border-red-500";
 
-export function InquiryForm({ type, action, defaults, consent }: Props) {
+export function InquiryForm({ type, action, defaults, consent, compact = false }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
   const v = (name: string, fallback = "") => state.values?.[name] ?? fallback;
   const [purchaseType, setPurchaseType] = useState(v("purchaseType", "company"));
   const err = (name: string) => state.errors?.[name];
 
   return (
-    <form action={formAction} className="space-y-6 rounded-xl border border-line bg-surface p-6" noValidate>
+    <form
+      action={formAction}
+      className={compact ? "space-y-4 text-sm" : "space-y-6 rounded-xl border border-line bg-surface p-6"}
+      noValidate
+    >
       {state.message && (
         <p role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200">
           {state.message}
@@ -39,7 +45,7 @@ export function InquiryForm({ type, action, defaults, consent }: Props) {
       </div>
       <input type="hidden" name="searchLogId" value={defaults.searchLogId} />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={compact ? "grid gap-3" : "grid gap-4 sm:grid-cols-2"}>
         <Field label="품번" required error={err("mpn")} htmlFor="mpn">
           <input id="mpn" name="mpn" defaultValue={v("mpn", defaults.mpn)} required maxLength={64} className={`${input} mpn`} aria-invalid={!!err("mpn")} />
         </Field>
@@ -103,7 +109,7 @@ export function InquiryForm({ type, action, defaults, consent }: Props) {
         <input id="company" name="company" defaultValue={v("company")} maxLength={100} className={input} aria-invalid={!!err("company")} />
       </Field>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className={compact ? "grid gap-3" : "grid gap-4 sm:grid-cols-3"}>
         <Field label="담당자명" required error={err("contactName")} htmlFor="contactName">
           <input id="contactName" name="contactName" autoComplete="name" defaultValue={v("contactName")} required className={input} aria-invalid={!!err("contactName")} />
         </Field>

@@ -90,6 +90,9 @@ export default async function EditPartPage(props: PageProps<"/admin/parts/[id]">
             <StatusBadge status={part.pageStatus} />
             <IndexableBadge indexable={quality.indexable} />
             <span className="mpn text-xs text-muted">{publicPath}</span>
+            <Link href={`/admin/parts/${part.id}/preview`} className="text-xs text-brand-600 hover:underline dark:text-brand-300">
+              미리보기
+            </Link>
             {part.pageStatus === "published" && (
               <a href={publicPath} target="_blank" className="text-xs text-brand-600 hover:underline dark:text-brand-300">
                 공개 페이지 ↗
