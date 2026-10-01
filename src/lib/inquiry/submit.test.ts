@@ -29,10 +29,33 @@ describe("submitInquiry", () => {
   it("정상 입력은 동의 문구 버전과 함께 저장한다", async () => {
     const r = repo();
     const res = await submitInquiry("sourcing", validForm(), "1.1.1.1", { repo: r, limiter: new ProviderRateLimiter() });
-    expect(res).toEqual({ status: "saved", id: "id-1" });
+    expect(res).toEqual({ status: "saved", id: "id-1", partId: null });
     expect(r.create).toHaveBeenCalledWith(
       expect.objectContaining({ type: "sourcing", consentThirdParty: true, consentTextVersion: expect.any(String) }),
     );
+  });
+
+  it("유입 정보와 부품 ID 를 함께 저장한다", async () => {
+    const r = repo();
+    const partId = "8f14e45f-ceea-4e7a-9b0e-2f1c3d4e5f60";
+    const attribution = {
+      landingUrl: "/parts/ti/lm358",
+      referrer: "https://www.google.com/",
+      utmSource: null,
+      utmMedium: null,
+      utmCampaign: null,
+      firstVisitAt: new Date("2026-10-01T00:00:00Z"),
+      trafficSource: "google",
+    };
+    const res = await submitInquiry("sourcing", validForm({ partId }), "1.1.1.1", { repo: r, limiter: new ProviderRateLimiter(), attribution });
+    expect(res).toMatchObject({ status: "saved", partId });
+    expect(r.create).toHaveBeenCalledWith(expect.objectContaining({ ...attribution, partId }));
+  });
+
+  it("유입 정보가 없으면 null 로 저장한다", async () => {
+    const r = repo();
+    await submitInquiry("quote", validForm(), "1.1.1.1", { repo: r, limiter: new ProviderRateLimiter() });
+    expect(r.create).toHaveBeenCalledWith(expect.objectContaining({ landingUrl: null, trafficSource: null, firstVisitAt: null }));
   });
 
   it("honeypot에 걸리면 저장하지 않는다", async () => {

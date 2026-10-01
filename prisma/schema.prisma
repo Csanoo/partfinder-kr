@@ -87,14 +87,27 @@ model Inquiry {
   notifyStatus         NotifyStatus    @default(pending) @map("notify_status")
   /// 개인정보 파기 시각 (파기 배치가 기록)
   personalDataPurgedAt DateTime?       @map("personal_data_purged_at") @db.Timestamptz(3)
+  /// 측정 (SEO_SPEC 8장): 첫 방문 기준 유입 정보
+  landingUrl           String?         @map("landing_url")
+  referrer             String?
+  utmSource            String?         @map("utm_source")
+  utmMedium            String?         @map("utm_medium")
+  utmCampaign          String?         @map("utm_campaign")
+  firstVisitAt         DateTime?       @map("first_visit_at") @db.Timestamptz(3)
+  /// google | naver | ai | other_search | referral | direct
+  trafficSource        String?         @map("traffic_source")
+  /// 부품 페이지에서 접수된 경우
+  partId               String?         @map("part_id") @db.Uuid
   createdAt            DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt            DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   searchLog SearchLog? @relation(fields: [searchLogId], references: [id], onDelete: SetNull)
+  part      Part?      @relation(fields: [partId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
   @@index([type, status])
   @@index([notifyStatus])
+  @@index([partId])
   @@map("inquiry")
 }
 
@@ -193,6 +206,8 @@ model Part {
   alternativeOf    PartAlternative[] @relation("AlternativeTarget")
   faqs             PartFaq[]
   manufacturerFact ManufacturerFact?
+  inquiries        Inquiry[]
+  events           Event[]
 
   @@unique([manufacturerId, mpnKey])
   @@index([pageStatus, indexable])
@@ -304,4 +319,34 @@ model ManufacturerFact {
 
   @@index([status])
   @@map("manufacturer_fact")
+}
+
+// ───────────── 측정 (docs/SEO_SPEC.md 8장) ─────────────
+
+/// 행동 이벤트. 봇은 기록하지 않는다. 개인 식별 정보 없음 (익명 세션 ID)
+model Event {
+  id            String   @id @default(uuid()) @db.Uuid
+  /// part_view | availability_view | sourcing_form_open | inquiry_submit
+  type          String
+  partId        String?  @map("part_id") @db.Uuid
+  sessionId     String?  @map("session_id")
+  path          String?
+  trafficSource String?  @map("traffic_source")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  part Part? @relation(fields: [partId], references: [id], onDelete: SetNull)
+
+  @@index([type, createdAt])
+  @@index([partId, type])
+  @@map("event")
+}
+
+/// 색인 가능 페이지 수 일별 기록 (추이 지표용)
+model IndexSnapshot {
+  day            DateTime @id @db.Date
+  publishedParts Int      @map("published_parts")
+  indexableParts Int      @map("indexable_parts")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@map("index_snapshot")
 }

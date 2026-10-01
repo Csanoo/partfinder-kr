@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyAdmin } from "@/lib/admin-auth";
+import { ATTRIBUTION_COOKIE, buildFirstTouch, encodeFirstTouch } from "@/lib/attribution";
+import { isBot } from "@/lib/search/search-log";
 import { db } from "@/lib/db";
 import { resolvePartRoute } from "@/lib/parts/resolve-route";
 import { prismaPartRouteRepo } from "@/lib/parts/service";
@@ -71,16 +73,28 @@ function withSession(request: NextRequest) {
   headers.set(SESSION_HEADER, sid);
   const response = NextResponse.next({ request: { headers } });
 
-  if (!existing) {
-    response.cookies.set(SESSION_COOKIE, sid, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 180,
-    });
+  const cookieOpts = {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 180,
+  };
+  if (!existing) response.cookies.set(SESSION_COOKIE, sid, cookieOpts);
+
+  // 첫 방문 정보 (SEO_SPEC 8장): 외부에서 문서로 처음 들어온 요청에서 한 번만 기록. 사이트 내 이동(RSC)·프리페치·봇은 제외
+  if (!request.cookies.has(ATTRIBUTION_COOKIE) && isDocumentRequest(request)) {
+    const touch = buildFirstTouch(new URL(request.url), request.headers.get("referer"));
+    response.cookies.set(ATTRIBUTION_COOKIE, encodeFirstTouch(touch), cookieOpts);
   }
   return response;
+}
+
+function isDocumentRequest(request: NextRequest): boolean {
+  if (request.method !== "GET") return false;
+  if (request.headers.has("rsc") || request.headers.has("next-router-prefetch") || request.headers.get("purpose") === "prefetch") return false;
+  if (!(request.headers.get("accept") ?? "").includes("text/html")) return false;
+  return !isBot(request.headers.get("user-agent"));
 }
 
 const GONE_HTML = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>더 이상 제공하지 않는 페이지</title></head>
@@ -89,5 +103,6 @@ const GONE_HTML = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><m
 <p><a href="/">부품 검색으로 이동</a></p></body></html>`;
 
 export const config = {
-  matcher: ["/search", "/parts/:path*", "/manufacturers/:path*", "/categories/:path*", "/admin", "/admin/:path*"],
+  // 페이지 요청 전체 (정적 파일·_next·api 제외). 첫 방문 기록·세션·부품 URL 정규화·관리자 인증
+  matcher: ["/((?!_next/|api/|.*\\.[a-z0-9]+$).*)"],
 };

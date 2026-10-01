@@ -6,6 +6,7 @@
 export type Lifecycle = "active" | "nrnd" | "ltb" | "eol" | "unknown";
 
 export interface PartPageModel {
+  id: string;
   mpnDisplay: string;
   manufacturer: { slug: string; nameEn: string; nameKo: string };
   category: { slug: string; nameKo: string; nameEn: string } | null;

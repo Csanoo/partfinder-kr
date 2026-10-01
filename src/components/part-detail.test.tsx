@@ -8,6 +8,7 @@ const SITE = "https://example.kr";
 
 function model(over: Partial<PartPageModel> = {}): PartPageModel {
   return {
+    id: "00000000-0000-4000-8000-000000000001",
     mpnDisplay: "LM358-N/NOPB",
     manufacturer: { slug: "texas-instruments", nameEn: "Texas Instruments", nameKo: "텍사스 인스트루먼트" },
     category: { slug: "amplifiers", nameKo: "증폭기", nameEn: "Amplifiers" },

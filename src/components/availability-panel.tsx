@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { track } from "@/lib/client/track";
 import type { AvailabilityResponse, AvailabilityRow, AvailabilityStatus } from "@/lib/availability";
 
 /**
@@ -36,8 +37,22 @@ function time(iso: string) {
   );
 }
 
-export function AvailabilityPanel({ mpn, isBot = false }: { mpn: string; isBot?: boolean }) {
+export function AvailabilityPanel({ mpn, isBot = false, partId = null }: { mpn: string; isBot?: boolean; partId?: string | null }) {
   const [state, setState] = useState<State>({ phase: "loading" });
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  // 측정: 재고 영역이 화면에 들어오면 1회 (SEO_SPEC 8장)
+  useEffect(() => {
+    if (isBot || !boxRef.current || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        track("availability_view", partId);
+        io.disconnect();
+      }
+    });
+    io.observe(boxRef.current);
+    return () => io.disconnect();
+  }, [isBot, partId]);
 
   useEffect(() => {
     if (isBot) return;
@@ -65,7 +80,7 @@ export function AvailabilityPanel({ mpn, isBot = false }: { mpn: string; isBot?:
 
   return (
     <div>
-      <div className={BOX} aria-live="polite" aria-busy={state.phase === "loading"}>
+      <div ref={boxRef} className={BOX} aria-live="polite" aria-busy={state.phase === "loading"}>
         {state.phase === "loading" && (
           <ul className="divide-y divide-line" aria-label="재고 조회 중">
             {[0, 1, 2].map((i) => (

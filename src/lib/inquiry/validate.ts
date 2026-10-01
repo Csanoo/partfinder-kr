@@ -18,6 +18,7 @@ export interface InquiryInput {
   consentPrivacy: true;
   consentThirdParty: boolean | null;
   searchLogId: string | null;
+  partId: string | null;
 }
 
 export type FieldErrors = Partial<Record<string, string>>;
@@ -51,6 +52,7 @@ export function validateInquiry(type: InquiryType, form: FormData): ValidationRe
   const consentPrivacy = form.get("consentPrivacy") === "on";
   const consentThirdParty = form.get("consentThirdParty") === "on";
   const searchLogRaw = str(form, "searchLogId");
+  const partIdRaw = str(form, "partId");
 
   if (mpn === "") errors.mpn = "품번을 입력해 주세요.";
   else if (mpn.length > MAX.mpn) errors.mpn = `품번은 ${MAX.mpn}자 이하로 입력해 주세요.`;
@@ -109,6 +111,7 @@ export function validateInquiry(type: InquiryType, form: FormData): ValidationRe
       // 견적 문의에는 제3자 제공 동의 항목이 없다
       consentThirdParty: type === "sourcing" ? true : null,
       searchLogId: UUID_RE.test(searchLogRaw) ? searchLogRaw : null,
+      partId: UUID_RE.test(partIdRaw) ? partIdRaw : null,
     },
   };
 }

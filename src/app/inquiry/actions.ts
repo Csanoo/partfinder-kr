@@ -1,9 +1,11 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { InquiryType } from "@/generated/prisma/enums";
-import { submitInquiry } from "@/lib/inquiry/submit";
+import { ATTRIBUTION_COOKIE, decodeFirstTouch } from "@/lib/attribution";
+import { recordEvent } from "@/lib/events-server";
+import { attributionFrom, submitInquiry } from "@/lib/inquiry/submit";
 import type { FieldErrors } from "@/lib/inquiry/validate";
 import { prismaInquiryRepo } from "@/lib/repos";
 
@@ -19,7 +21,12 @@ async function handle(type: InquiryType, formData: FormData): Promise<InquiryFor
   // TODO(확인필요): 배포 환경의 프록시 구성에 맞춰 신뢰할 IP 헤더 확정
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
 
-  const res = await submitInquiry(type, formData, ip, { repo: prismaInquiryRepo });
+  const jar = await cookies();
+  const attribution = attributionFrom(decodeFirstTouch(jar.get(ATTRIBUTION_COOKIE)?.value));
+  const res = await submitInquiry(type, formData, ip, { repo: prismaInquiryRepo, attribution });
+  if (res.status === "saved") {
+    await recordEvent({ type: "inquiry_submit", partId: res.partId, path: h.get("referer") ? new URL(h.get("referer")!).pathname : null }, jar);
+  }
   if (res.status === "saved" || res.status === "spam") redirect(`/inquiry/thanks?type=${type}`);
 
   const values: Record<string, string> = {};

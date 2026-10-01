@@ -8,6 +8,7 @@ import { AvailabilityPanel } from "@/components/availability-panel";
 import { InquiryForm } from "@/components/inquiry-form";
 import { JsonLd } from "@/components/json-ld";
 import { PartDetail } from "@/components/part-detail";
+import { TrackOnMount } from "@/components/track-view";
 import { consentTexts } from "@/lib/inquiry/consent";
 import { loadPublishedPart } from "@/lib/parts/load-page";
 import { buildDescription, buildJsonLd, buildRobots, buildTitle } from "@/lib/parts/page-model";
@@ -45,14 +46,15 @@ export default async function PartPage(props: PageProps<"/parts/[manufacturer]/[
   return (
     <>
       <JsonLd data={buildJsonLd(part, site.url)} />
+      {!bot && <TrackOnMount type="part_view" partId={part.id} />}
       <PartDetail
         part={part}
-        availability={<AvailabilityPanel mpn={part.mpnDisplay} isBot={bot} />}
+        availability={<AvailabilityPanel mpn={part.mpnDisplay} isBot={bot} partId={part.id} />}
         sourcingForm={
           <InquiryForm
             type="sourcing"
             action={submitSourcingInquiry}
-            defaults={{ mpn: part.mpnDisplay, qty: "", searchLogId: "" }}
+            defaults={{ mpn: part.mpnDisplay, qty: "", searchLogId: "", partId: part.id }}
             consent={consentTexts()}
             compact
           />

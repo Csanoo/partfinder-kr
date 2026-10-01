@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
+import { track } from "@/lib/client/track";
 import type { InquiryFormState } from "@/app/inquiry/actions";
 import { HONEYPOT_FIELD } from "@/lib/inquiry/validate";
 
@@ -9,7 +10,7 @@ type Action = (prev: InquiryFormState, formData: FormData) => Promise<InquiryFor
 interface Props {
   type: "quote" | "sourcing";
   action: Action;
-  defaults: { mpn: string; qty: string; searchLogId: string };
+  defaults: { mpn: string; qty: string; searchLogId: string; partId?: string };
   consent: { privacy: string; thirdParty: string };
   /** 좁은 영역(부품 페이지 사이드바)용: 한 열 배치, 테두리 없음 */
   compact?: boolean;
@@ -23,11 +24,19 @@ export function InquiryForm({ type, action, defaults, consent, compact = false }
   const v = (name: string, fallback = "") => state.values?.[name] ?? fallback;
   const [purchaseType, setPurchaseType] = useState(v("purchaseType", "company"));
   const err = (name: string) => state.errors?.[name];
+  // 측정: 부품 페이지에 들어 있는 소싱 폼은 첫 입력 시점을 "폼 열기"로 본다
+  const opened = useRef(false);
+  const onFirstFocus = () => {
+    if (type !== "sourcing" || !compact || opened.current) return;
+    opened.current = true;
+    track("sourcing_form_open", defaults.partId ?? null);
+  };
 
   return (
     <form
       action={formAction}
       className={compact ? "space-y-4 text-sm" : "space-y-6 rounded-xl border border-line bg-surface p-6"}
+      onFocusCapture={onFirstFocus}
       noValidate
     >
       {state.message && (
@@ -44,6 +53,7 @@ export function InquiryForm({ type, action, defaults, consent, compact = false }
         </label>
       </div>
       <input type="hidden" name="searchLogId" value={defaults.searchLogId} />
+      <input type="hidden" name="partId" value={defaults.partId ?? ""} />
 
       <div className={compact ? "grid gap-3" : "grid gap-4 sm:grid-cols-2"}>
         <Field label="품번" required error={err("mpn")} htmlFor="mpn">

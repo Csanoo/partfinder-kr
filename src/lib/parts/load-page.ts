@@ -65,6 +65,7 @@ async function toModel(part: PartRow): Promise<PartPageModel> {
   });
 
   return {
+    id: part.id,
     mpnDisplay: part.mpnDisplay,
     manufacturer: { slug: part.manufacturer.slug, nameEn: part.manufacturer.nameEn, nameKo: part.manufacturer.nameKo },
     category: part.category ? { slug: part.category.slug, nameKo: part.category.nameKo, nameEn: part.category.nameEn } : null,

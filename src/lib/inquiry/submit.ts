@@ -1,14 +1,38 @@
 import type { InquiryType } from "@/generated/prisma/enums";
 import { ProviderRateLimiter } from "@/lib/providers/rate-limiter";
 import { consentTexts } from "@/lib/inquiry/consent";
+import type { FirstTouch } from "@/lib/attribution";
 import { validateInquiry, type FieldErrors, type InquiryInput } from "@/lib/inquiry/validate";
 
+/** 문의에 함께 저장하는 유입 정보 (SEO_SPEC 8장) */
+export interface InquiryAttribution {
+  landingUrl: string | null;
+  referrer: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  firstVisitAt: Date | null;
+  trafficSource: string | null;
+}
+
+export function attributionFrom(touch: FirstTouch | null): InquiryAttribution {
+  return {
+    landingUrl: touch?.landingUrl ?? null,
+    referrer: touch?.referrer ?? null,
+    utmSource: touch?.utmSource ?? null,
+    utmMedium: touch?.utmMedium ?? null,
+    utmCampaign: touch?.utmCampaign ?? null,
+    firstVisitAt: touch ? new Date(touch.firstVisitAt) : null,
+    trafficSource: touch?.trafficSource ?? null,
+  };
+}
+
 export interface InquiryRepo {
-  create(data: InquiryInput & { consentTextVersion: string }): Promise<{ id: string }>;
+  create(data: InquiryInput & InquiryAttribution & { consentTextVersion: string }): Promise<{ id: string }>;
 }
 
 export type SubmitResult =
-  | { status: "saved"; id: string }
+  | { status: "saved"; id: string; partId: string | null }
   /** honeypot에 걸린 경우: 저장하지 않지만 봇에게는 성공처럼 보이게 한다 */
   | { status: "spam" }
   | { status: "rate_limited" }
@@ -24,7 +48,7 @@ export async function submitInquiry(
   type: InquiryType,
   form: FormData,
   ip: string,
-  deps: { repo: InquiryRepo; limiter?: ProviderRateLimiter },
+  deps: { repo: InquiryRepo; limiter?: ProviderRateLimiter; attribution?: InquiryAttribution },
 ): Promise<SubmitResult> {
   const result = validateInquiry(type, form);
   if (!result.ok && result.spam) return { status: "spam" };
@@ -34,6 +58,10 @@ export async function submitInquiry(
 
   if (!result.ok) return { status: "invalid", errors: result.errors };
 
-  const saved = await deps.repo.create({ ...result.data, consentTextVersion: consentTexts().version });
-  return { status: "saved", id: saved.id };
+  const saved = await deps.repo.create({
+    ...result.data,
+    ...(deps.attribution ?? attributionFrom(null)),
+    consentTextVersion: consentTexts().version,
+  });
+  return { status: "saved", id: saved.id, partId: result.data.partId };
 }
