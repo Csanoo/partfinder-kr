@@ -1,0 +1,22 @@
+[
+  { "mpn": "LM358-N/NOPB", "slug": "lm358-n_nopb", "key": "LM358N/NOPB", "note": "슬래시" },
+  { "mpn": "MAX232CPE+", "slug": "max232cpe-plus", "key": "MAX232CPE+", "note": "플러스 (무연 표기)" },
+  { "mpn": "MAX232CPE", "slug": "max232cpe", "key": "MAX232CPE", "note": "플러스 없는 별개 품번" },
+  { "mpn": "LT1083CP#PBF", "slug": "lt1083cp_pbf", "key": "LT1083CP#PBF", "note": "샵" },
+  { "mpn": "LTC6655BHMS8-2.5#PBF", "slug": "ltc6655bhms8-2.5_pbf", "key": "LTC6655BHMS82.5#PBF", "note": "점 + 샵" },
+  { "mpn": "BAV99,215", "slug": "bav99_215", "key": "BAV99,215", "note": "쉼표" },
+  { "mpn": "2N7002,215", "slug": "2n7002_215", "key": "2N7002,215", "note": "숫자 시작 + 쉼표" },
+  { "mpn": "PIC16F877A-I/P", "slug": "pic16f877a-i_p", "key": "PIC16F877AI/P", "note": "하이픈 + 슬래시" },
+  { "mpn": "MCP2551-I/SN", "slug": "mcp2551-i_sn", "key": "MCP2551I/SN", "note": "하이픈 + 슬래시" },
+  { "mpn": "LM2596S-ADJ/NOPB", "slug": "lm2596s-adj_nopb", "key": "LM2596SADJ/NOPB", "note": "하이픈 + 슬래시" },
+  { "mpn": "HMC 349 AMS8G", "slug": "hmc-349-ams8g", "key": "HMC349AMS8G", "note": "공백" },
+  { "mpn": "CRCW0603 10K0 FKEA", "slug": "crcw0603-10k0-fkea", "key": "CRCW060310K0FKEA", "note": "공백 (저항 표기)" },
+  { "mpn": "μPC1237HA", "slug": "upc1237ha", "key": "ΜPC1237HA", "note": "그리스 문자 뮤" },
+  { "mpn": "1N4148W-7-F", "slug": "1n4148w-7-f", "key": "1N4148W7F", "note": "숫자 시작 + 하이픈 여러 개" },
+  { "mpn": "AD8221ARZ-R7", "slug": "ad8221arz-r7", "key": "AD8221ARZR7", "note": "릴 접미사" },
+  { "mpn": "ADM3053BRWZ-REEL7", "slug": "adm3053brwz-reel7", "key": "ADM3053BRWZREEL7", "note": "릴 접미사" },
+  { "mpn": "XC6SLX9-2TQG144C", "slug": "xc6slx9-2tqg144c", "key": "XC6SLX92TQG144C", "note": "속도 등급 하이픈" },
+  { "mpn": "TPS54331DR", "slug": "tps54331dr", "key": "TPS54331DR", "note": "일반" },
+  { "mpn": "SN74HC595N", "slug": "sn74hc595n", "key": "SN74HC595N", "note": "일반" },
+  { "mpn": "MC33063A(D)", "slug": "mc33063a_d", "key": "MC33063A(D)", "note": "괄호" }
+]

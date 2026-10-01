@@ -1,5 +1,5 @@
-// 데이터 모델: docs/SPEC.md 7장
-// 수집한 가격·재고는 저장하지 않는다 (장기 보관 부품 DB 금지). 검색 로그와 문의만 저장한다.
+// 데이터 모델: docs/SPEC.md 7장 (검색·문의), docs/SEO_SPEC.md 3장 (부품 페이지)
+// 유통사에서 수집한 가격·재고는 저장하지 않는다. 부품 테이블은 관리자가 직접 입력한 콘텐츠만 담는다.
 
 generator client {
   provider = "prisma-client"
@@ -63,32 +63,32 @@ model SearchLog {
 }
 
 model Inquiry {
-  id                 String          @id @default(uuid()) @db.Uuid
-  type               InquiryType
-  mpn                String
-  qty                Int
+  id                   String          @id @default(uuid()) @db.Uuid
+  type                 InquiryType
+  mpn                  String
+  qty                  Int
   /// 희망 납기. null 이고 dueNegotiable=true 면 "협의"
-  dueDate            DateTime?       @map("due_date") @db.Date
-  dueNegotiable      Boolean         @default(false) @map("due_negotiable")
-  itemCountBucket    ItemCountBucket @map("item_count_bucket")
-  purchaseType       PurchaseType    @map("purchase_type")
-  company            String?
+  dueDate              DateTime?       @map("due_date") @db.Date
+  dueNegotiable        Boolean         @default(false) @map("due_negotiable")
+  itemCountBucket      ItemCountBucket @map("item_count_bucket")
+  purchaseType         PurchaseType    @map("purchase_type")
+  company              String?
   /// 개인정보 (보유기간 경과 시 삭제 대상)
-  contactName        String?         @map("contact_name")
-  phone              String?
-  email              String?
-  memo               String?
-  consentPrivacy     Boolean         @map("consent_privacy")
+  contactName          String?         @map("contact_name")
+  phone                String?
+  email                String?
+  memo                 String?
+  consentPrivacy       Boolean         @map("consent_privacy")
   /// 소싱 문의만 필수, 견적 문의는 null
-  consentThirdParty  Boolean?        @map("consent_third_party")
-  consentTextVersion String          @map("consent_text_version")
-  searchLogId        String?         @map("search_log_id") @db.Uuid
-  status             InquiryStatus   @default(new)
-  notifyStatus       NotifyStatus    @default(pending) @map("notify_status")
+  consentThirdParty    Boolean?        @map("consent_third_party")
+  consentTextVersion   String          @map("consent_text_version")
+  searchLogId          String?         @map("search_log_id") @db.Uuid
+  status               InquiryStatus   @default(new)
+  notifyStatus         NotifyStatus    @default(pending) @map("notify_status")
   /// 개인정보 파기 시각 (파기 배치가 기록)
-  personalDataPurgedAt DateTime?     @map("personal_data_purged_at") @db.Timestamptz(3)
-  createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt          DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+  personalDataPurgedAt DateTime?       @map("personal_data_purged_at") @db.Timestamptz(3)
+  createdAt            DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   searchLog SearchLog? @relation(fields: [searchLogId], references: [id], onDelete: SetNull)
 
@@ -96,4 +96,183 @@ model Inquiry {
   @@index([type, status])
   @@index([notifyStatus])
   @@map("inquiry")
+}
+
+// ───────────── 부품 페이지 (docs/SEO_SPEC.md) ─────────────
+
+enum PartLifecycle {
+  active
+  nrnd
+  ltb
+  eol
+  unknown
+}
+
+enum PageStatus {
+  draft
+  review
+  published
+  unpublished
+}
+
+enum AltRelation {
+  drop_in
+  similar
+  upgrade
+}
+
+enum FaqSource {
+  inquiry
+  manual
+}
+
+model Manufacturer {
+  id            String   @id @default(uuid()) @db.Uuid
+  slug          String   @unique
+  nameKo        String   @map("name_ko")
+  nameEn        String   @map("name_en")
+  descriptionKo String?  @map("description_ko")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  parts    Part[]
+  slugs    PartSlug[]
+  variants PartVariant[]
+
+  @@map("manufacturer")
+}
+
+model Category {
+  id            String   @id @default(uuid()) @db.Uuid
+  slug          String   @unique
+  nameKo        String   @map("name_ko")
+  nameEn        String   @map("name_en")
+  descriptionKo String?  @map("description_ko")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  parts Part[]
+
+  @@map("category")
+}
+
+model Part {
+  id                 String        @id @default(uuid()) @db.Uuid
+  /// 원본 품번 표기. 절대 덮어쓰지 않는다 (수정 시 이전 slug는 part_slug에 남아 301)
+  mpnDisplay         String        @map("mpn_display")
+  /// 정규화: 대문자, 공백·하이픈 제거
+  mpnKey             String        @map("mpn_key")
+  manufacturerId     String        @map("manufacturer_id") @db.Uuid
+  categoryId         String?       @map("category_id") @db.Uuid
+  package            String?
+  summaryKo          String?       @map("summary_ko")
+  /// [{label, value}] 관리자 입력
+  keySpecs           Json          @default("[]") @map("key_specs")
+  lifecycleStatus    PartLifecycle @default(unknown) @map("lifecycle_status")
+  lifecycleCheckedAt DateTime?     @map("lifecycle_checked_at") @db.Timestamptz(3)
+  lifecycleSource    String?       @map("lifecycle_source")
+  eolDate            DateTime?     @map("eol_date") @db.Date
+  /// 제조사 공식 URL만
+  datasheetUrl       String?       @map("datasheet_url")
+  pageStatus         PageStatus    @default(draft) @map("page_status")
+  /// 품질 기준(SEO_SPEC 5.3) 계산값. 저장 시 갱신
+  indexable          Boolean       @default(false)
+  reviewedBy         String?       @map("reviewed_by")
+  reviewedAt         DateTime?     @map("reviewed_at") @db.Timestamptz(3)
+  publishedAt        DateTime?     @map("published_at") @db.Timestamptz(3)
+  /// 사이트맵 lastmod용: 실제 콘텐츠가 바뀐 시각
+  contentUpdatedAt   DateTime      @default(now()) @map("content_updated_at") @db.Timestamptz(3)
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  manufacturer  Manufacturer      @relation(fields: [manufacturerId], references: [id])
+  category      Category?         @relation(fields: [categoryId], references: [id])
+  slugs         PartSlug[]
+  variants      PartVariant[]
+  alternatives  PartAlternative[] @relation("PartAlternatives")
+  alternativeOf PartAlternative[] @relation("AlternativeTarget")
+  faqs          PartFaq[]
+
+  @@unique([manufacturerId, mpnKey])
+  @@index([pageStatus, indexable])
+  @@index([categoryId])
+  @@index([lifecycleStatus])
+  @@map("part")
+}
+
+/// slug ↔ 부품 매핑. 현재 정규 slug(isCanonical) + 과거 slug(301용)
+model PartSlug {
+  id             String   @id @default(uuid()) @db.Uuid
+  partId         String   @map("part_id") @db.Uuid
+  manufacturerId String   @map("manufacturer_id") @db.Uuid
+  slug           String
+  /// 대소문자·하이픈을 무시한 매칭 키
+  slugKey        String   @map("slug_key")
+  isCanonical    Boolean  @default(true) @map("is_canonical")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  part         Part         @relation(fields: [partId], references: [id], onDelete: Cascade)
+  manufacturer Manufacturer @relation(fields: [manufacturerId], references: [id])
+
+  @@unique([manufacturerId, slugKey])
+  @@unique([manufacturerId, slug])
+  @@index([partId])
+  @@map("part_slug")
+}
+
+/// 변형 품번 (패키징 접미사 등). 별도 페이지 없이 기준 부품으로 301
+model PartVariant {
+  id             String @id @default(uuid()) @db.Uuid
+  partId         String @map("part_id") @db.Uuid
+  manufacturerId String @map("manufacturer_id") @db.Uuid
+  mpnVariant     String @map("mpn_variant")
+  mpnVariantKey  String @map("mpn_variant_key")
+  /// URL 매칭용 (slugKey(slugifyMpn(mpnVariant)))
+  variantSlugKey String @map("variant_slug_key")
+
+  part         Part         @relation(fields: [partId], references: [id], onDelete: Cascade)
+  manufacturer Manufacturer @relation(fields: [manufacturerId], references: [id])
+
+  @@unique([manufacturerId, mpnVariantKey])
+  @@unique([manufacturerId, variantSlugKey])
+  @@index([partId])
+  @@map("part_variant")
+}
+
+model PartAlternative {
+  id         String      @id @default(uuid()) @db.Uuid
+  partId     String      @map("part_id") @db.Uuid
+  /// 내부 페이지가 있는 대체품
+  altPartId  String?     @map("alt_part_id") @db.Uuid
+  /// 내부 페이지가 없는 대체품 품번
+  altMpnText String?     @map("alt_mpn_text")
+  relation   AltRelation
+  noteKo     String?     @map("note_ko")
+  verified   Boolean     @default(false)
+  verifiedBy String?     @map("verified_by")
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  part    Part  @relation("PartAlternatives", fields: [partId], references: [id], onDelete: Cascade)
+  altPart Part? @relation("AlternativeTarget", fields: [altPartId], references: [id], onDelete: SetNull)
+
+  @@index([partId])
+  @@map("part_alternative")
+}
+
+model PartFaq {
+  id              String    @id @default(uuid()) @db.Uuid
+  partId          String    @map("part_id") @db.Uuid
+  questionKo      String    @map("question_ko")
+  answerKo        String    @map("answer_ko")
+  source          FaqSource
+  published       Boolean   @default(false)
+  /// 문의에서 전환한 경우 원 문의 (개인정보는 FAQ에 옮기지 않는다)
+  sourceInquiryId String?   @map("source_inquiry_id") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  part Part @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@index([partId, published])
+  @@map("part_faq")
 }
