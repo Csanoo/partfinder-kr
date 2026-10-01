@@ -28,7 +28,9 @@ import {
   StatusBadge,
   ymd,
 } from "@/components/admin/ui";
+import { ManufacturerFactsPanel } from "@/components/admin/manufacturer-facts-panel";
 import type { PageStatus } from "@/generated/prisma/enums";
+import { sourceForManufacturer } from "@/lib/manufacturer/registry";
 import { db } from "@/lib/db";
 import { getQuality } from "@/lib/parts/admin";
 import { partPath } from "@/lib/parts/resolve-route";
@@ -188,6 +190,10 @@ export default async function EditPartPage(props: PageProps<"/admin/parts/[id]">
                 </li>
               ))}
             </ul>
+          </Card>
+
+          <Card title="제조사 공식 정보">
+            <ManufacturerFactsPanel partId={part.id} supported={sourceForManufacturer(part.manufacturer.slug) != null} />
           </Card>
 
           <Card title="검토·게시">
