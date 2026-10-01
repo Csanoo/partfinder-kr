@@ -2,9 +2,11 @@
 
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import type { InquiryType } from "@/generated/prisma/enums";
 import { ATTRIBUTION_COOKIE, decodeFirstTouch } from "@/lib/attribution";
 import { recordEvent } from "@/lib/events-server";
+import { sendInquiryNotification } from "@/lib/inquiry/notify-server";
 import { attributionFrom, submitInquiry } from "@/lib/inquiry/submit";
 import type { FieldErrors } from "@/lib/inquiry/validate";
 import { prismaInquiryRepo } from "@/lib/repos";
@@ -25,6 +27,9 @@ async function handle(type: InquiryType, formData: FormData): Promise<InquiryFor
   const attribution = attributionFrom(decodeFirstTouch(jar.get(ATTRIBUTION_COOKIE)?.value));
   const res = await submitInquiry(type, formData, ip, { repo: prismaInquiryRepo, attribution });
   if (res.status === "saved") {
+    // 알림은 응답 뒤에 보낸다. 실패해도 문의는 이미 저장되어 있다 (notify_status 로 표시)
+    const inquiryId = res.id;
+    after(() => sendInquiryNotification(inquiryId));
     await recordEvent({ type: "inquiry_submit", partId: res.partId, path: h.get("referer") ? new URL(h.get("referer")!).pathname : null }, jar);
   }
   if (res.status === "saved" || res.status === "spam") redirect(`/inquiry/thanks?type=${type}`);

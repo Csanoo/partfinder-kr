@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { setInquiryStatusAction } from "@/app/admin/inquiries/actions";
+import { resendNotificationAction, setInquiryStatusAction } from "@/app/admin/inquiries/actions";
 import { INQUIRY_STATUS_LABEL, INQUIRY_TYPE_LABEL, ITEM_BUCKET_LABEL, NOTIFY_LABEL, PURCHASE_LABEL } from "@/components/admin/labels";
 import { btnPrimary, Card } from "@/components/admin/ui";
 import { TRAFFIC_LABEL, type TrafficSource } from "@/lib/attribution";
@@ -54,8 +54,13 @@ export default async function InquiryDetailPage(props: PageProps<"/admin/inquiri
           ))}
         </select>
         <button className={btnPrimary}>상태 저장</button>
-        <span className="text-xs text-muted">알림 메일: {NOTIFY_LABEL[q.notifyStatus]}</span>
+        <span className={`text-xs ${q.notifyStatus === "failed" ? "font-semibold text-red-600" : "text-muted"}`}>알림 메일: {NOTIFY_LABEL[q.notifyStatus]}</span>
       </form>
+      {q.notifyStatus !== "sent" && (
+        <form action={resendNotificationAction.bind(null, q.id)}>
+          <button className="rounded-lg border border-line px-3 py-1.5 text-sm hover:bg-brand-50 dark:hover:bg-brand-900/30">알림 메일 다시 보내기</button>
+        </form>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card title="문의 내용">

@@ -12,6 +12,7 @@ const nav = [
   { href: "/admin/parts/import", label: "CSV 가져오기" },
   { href: "/admin/facts", label: "제조사 정보 검토" },
   { href: "/admin/taxonomy", label: "제조사·카테고리" },
+  { href: "/admin/settings", label: "설정" },
 ];
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
