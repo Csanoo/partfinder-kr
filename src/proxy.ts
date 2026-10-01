@@ -8,6 +8,7 @@ export const SESSION_COOKIE = "pf_sid";
 export const SESSION_HEADER = "x-pf-sid";
 
 const PART_PATH = /^\/parts\/([^/]+)\/([^/]+)\/?$/;
+const HUB_PATH = /^\/(manufacturers|categories)\/([^/]+)\/?$/;
 
 export async function proxy(request: NextRequest) {
   // 관리자 화면: Basic Auth (docs/SPEC.md 8장)
@@ -21,6 +22,17 @@ export async function proxy(request: NextRequest) {
     const res = NextResponse.next();
     res.headers.set("X-Robots-Tag", "noindex, nofollow");
     return res;
+  }
+
+  // 허브 URL: slug 는 소문자만 정규 → 대소문자·끝 슬래시 차이는 301
+  const hub = HUB_PATH.exec(request.nextUrl.pathname);
+  if (hub) {
+    const canonical = `/${hub[1]}/${hub[2].toLowerCase()}`;
+    if (request.nextUrl.pathname !== canonical) {
+      const url = request.nextUrl.clone();
+      url.pathname = canonical;
+      return NextResponse.redirect(url, 301);
+    }
   }
 
   // 부품 URL: 정규화 301, 비게시 410 (docs/SEO_SPEC.md 4장). Proxy는 Node.js 런타임이라 DB 조회 가능
@@ -77,5 +89,5 @@ const GONE_HTML = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><m
 <p><a href="/">부품 검색으로 이동</a></p></body></html>`;
 
 export const config = {
-  matcher: ["/search", "/parts/:path*", "/admin", "/admin/:path*"],
+  matcher: ["/search", "/parts/:path*", "/manufacturers/:path*", "/categories/:path*", "/admin", "/admin/:path*"],
 };

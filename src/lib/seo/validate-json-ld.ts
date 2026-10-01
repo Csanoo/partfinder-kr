@@ -3,7 +3,7 @@
  * 외부 검증 도구 없이 테스트에서 돌릴 수 있는 범위만 확인한다.
  */
 
-const ALLOWED_TYPES = new Set(["Product", "BreadcrumbList", "FAQPage", "Organization", "WebSite"]);
+const ALLOWED_TYPES = new Set(["Product", "BreadcrumbList", "FAQPage", "Organization", "WebSite", "ItemList"]);
 /** SEO_SPEC 제약 4·5.4: 가격·평점·리뷰 금지 */
 const FORBIDDEN_KEYS = new Set(["offers", "price", "priceCurrency", "lowPrice", "highPrice", "aggregateRating", "review"]);
 
@@ -59,6 +59,22 @@ export function validateJsonLd(nodes: unknown[]): string[] {
           if (!nonEmpty(it.name)) errors.push(`${at} item[${j}] name 필수`);
           if (!isAbsUrl(it.item)) errors.push(`${at} item[${j}] item 은 절대 URL`);
         });
+    }
+
+    if (type === "ItemList") {
+      if (!nonEmpty(node.name)) errors.push(`${at} ItemList.name 필수`);
+      const items = node.itemListElement;
+      if (!Array.isArray(items)) errors.push(`${at} ItemList.itemListElement 필수`);
+      else {
+        let prev = 0;
+        items.forEach((it, j) => {
+          if (!isObj(it) || it["@type"] !== "ListItem") return errors.push(`${at} item[${j}] ListItem 아님`);
+          if (typeof it.position !== "number" || it.position <= prev) errors.push(`${at} item[${j}] position 은 증가해야 함`);
+          prev = typeof it.position === "number" ? it.position : prev;
+          if (!nonEmpty(it.name)) errors.push(`${at} item[${j}] name 필수`);
+          if (!isAbsUrl(it.url)) errors.push(`${at} item[${j}] url 은 절대 URL`);
+        });
+      }
     }
 
     if (type === "FAQPage") {

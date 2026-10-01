@@ -1,3 +1,4 @@
+import { HubLinks } from "@/components/hub-links";
 import { JsonLd } from "@/components/json-ld";
 import { SearchForm } from "@/components/search-form";
 import { site } from "@/lib/site";
@@ -98,6 +99,8 @@ export default function Home() {
           </div>
         ))}
       </section>
+
+      <HubLinks />
 
       <section aria-labelledby="how-heading" className="grid gap-8 md:grid-cols-[1fr_1.4fr]">
         <div>
