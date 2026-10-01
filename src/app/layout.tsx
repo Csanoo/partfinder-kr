@@ -23,6 +23,11 @@ export const metadata: Metadata = {
   applicationName: site.name,
   alternates: { canonical: "/" },
   openGraph: { type: "website", locale: "ko_KR", siteName: site.name },
+  // 검색엔진 사이트 소유 확인 (SEO_SPEC 6.5). 값이 없으면 태그를 넣지 않는다
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.NAVER_SITE_VERIFICATION ? { other: { "naver-site-verification": process.env.NAVER_SITE_VERIFICATION } } : {}),
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

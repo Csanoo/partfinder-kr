@@ -1,16 +1,11 @@
 import type { MetadataRoute } from "next";
+import { buildRobotsRules } from "@/lib/seo/robots-config";
 import { absoluteUrl } from "@/lib/seo/part-url";
 
+/** docs/SEO_SPEC.md 6.2: /admin·/search·/api 차단, AI 크롤러 허용·차단 목록, 사이트맵 인덱스 경로 */
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [
-      {
-        userAgent: "*",
-        allow: "/",
-        // /search 는 noindex 메타로 처리하므로 막지 않는다 (막으면 noindex를 읽지 못함).
-        disallow: ["/admin", "/api/"],
-      },
-    ],
+    rules: buildRobotsRules(),
     sitemap: absoluteUrl("/sitemap.xml"),
   };
 }
