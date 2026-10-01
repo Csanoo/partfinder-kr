@@ -1,5 +1,5 @@
-import { DistributorResults } from "@/components/distributor-results";
 import { SearchForm } from "@/components/search-form";
+import { SearchResultSections } from "@/components/search-result-sections";
 import { parseQty, toSearchQuery } from "@/lib/search/normalize";
 import { searchParts } from "@/lib/search/search-parts";
 
@@ -24,7 +24,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
       {results == null ? (
         <p className="text-zinc-600 dark:text-zinc-400">품번을 입력해 주세요.</p>
       ) : (
-        <DistributorResults results={results} qty={qty} />
+        <SearchResultSections results={results} mpn={rawQuery.trim()} qty={qty} />
       )}
     </div>
   );
