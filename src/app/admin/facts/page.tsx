@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { ADMIN_BATCH_SIZE, applySelectedAction, dismissSelectedAction, runBatchAction } from "@/app/admin/facts/actions";
+import { applySelectedAction, dismissSelectedAction, runBatchAction } from "@/app/admin/facts/actions";
 import { btnPrimary, btnSecondary, first, Notice } from "@/components/admin/ui";
 import type { FactStatus } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
-import { pickTargets } from "@/lib/manufacturer/batch";
+import { ADMIN_BATCH_SIZE, pickTargets } from "@/lib/manufacturer/batch";
 import { buildProposals } from "@/lib/manufacturer/proposals";
 import type { ManufacturerFacts } from "@/lib/manufacturer/types";
 

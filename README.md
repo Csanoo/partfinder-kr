@@ -19,7 +19,8 @@ npm run dev            # http://localhost:3000
 
 ```bash
 npm run db:start     # 개발 DB 실행 (재부팅 후 한 번)
-npm run db:migrate   # 스키마 변경 반영
+npm run db:migrate   # 스키마 변경 반영 (예: npm run db:migrate -- --name add_x). 반영 후 개발 서버 재시작
+npm run mfr:fetch -- --limit=100   # 제조사 공식 정보 일괄 조회 (TI). 결과는 /admin/facts 에서 검토 후 반영
 ```
 
 처음 만들 때(이미 만들어져 있으면 생략): `initdb -D .pgdata -U partfinder --auth=scram-sha-256 --pwfile=<비밀번호 파일>` 후 `.env`에 `DATABASE_URL="postgresql://partfinder:<비밀번호>@localhost:5434/partfinder"`.

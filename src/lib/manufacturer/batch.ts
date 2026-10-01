@@ -4,6 +4,9 @@ import { db } from "@/lib/db";
 import { fetchManufacturerFacts, supportedManufacturerSlugs } from "@/lib/manufacturer/registry";
 import { TI_MIN_INTERVAL_MS } from "@/lib/manufacturer/ti";
 
+/** 관리자 화면에서 한 번에 조회하는 개수 (요청 간격 때문에 1건당 수 초) */
+export const ADMIN_BATCH_SIZE = 10;
+
 export interface BatchOptions {
   limit: number;
   /** 대상 게시 상태 (기본: 초안·검토 중) */

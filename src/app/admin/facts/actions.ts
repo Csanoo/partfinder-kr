@@ -5,12 +5,9 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { applyFacts } from "@/lib/manufacturer/apply";
-import { runFactsBatch } from "@/lib/manufacturer/batch";
+import { ADMIN_BATCH_SIZE, runFactsBatch } from "@/lib/manufacturer/batch";
 import { buildProposals, type ProposalField } from "@/lib/manufacturer/proposals";
 import type { ManufacturerFacts } from "@/lib/manufacturer/types";
-
-/** 관리자 화면에서 한 번에 조회하는 개수 (요청 간격 때문에 1건당 수 초) */
-export const ADMIN_BATCH_SIZE = 10;
 
 const back = (params: Record<string, string>): never => redirect(`/admin/facts?${new URLSearchParams(params).toString()}`);
 
