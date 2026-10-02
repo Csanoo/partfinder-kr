@@ -1,8 +1,9 @@
 name: CI
 
+# PR 과 main 이외 브랜치 검사. main 은 Deploy 워크플로가 같은 검사를 하고 배포까지 한다.
 on:
   push:
-    branches: [main]
+    branches-ignore: [main]
   pull_request:
 
 permissions:

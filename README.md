@@ -28,7 +28,7 @@ npm run mfr:fetch -- --limit=100   # 제조사 공식 정보 일괄 조회 (TI).
 ## 배포
 
 AWS Lightsail 서버 1대 (Next.js standalone + PostgreSQL + Caddy). 절차는 [docs/DEPLOY.md](docs/DEPLOY.md).
-CI(`.github/workflows/ci.yml`)는 push 마다, 배포(`deploy.yml`)는 Actions 에서 수동 실행.
+main 에 push 하면 `deploy.yml` 이 검사 후 자동 배포 (저장소 변수 `AUTO_DEPLOY=true` 일 때). PR·다른 브랜치는 `ci.yml` 이 검사.
 
 ## 스크립트
 

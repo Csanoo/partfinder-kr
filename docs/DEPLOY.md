@@ -91,6 +91,26 @@ lint·타입 검사·테스트·빌드를 통과해야 서버에 올라간다. �
 - `https://도메인/` 홈
 - `https://도메인/admin` 관리자 로그인
 
+### 5-4. 자동 배포 켜기
+
+첫 수동 배포가 성공하면, main 에 push 할 때마다 자동으로 배포되게 한다.
+
+GitHub → Settings → Secrets and variables → Actions → **Variables** 탭 → New repository variable:
+
+| 이름 | 값 | 역할 |
+|---|---|---|
+| `AUTO_DEPLOY` | `true` | main push 시 자동 배포 (없거나 `true` 가 아니면 검사만) |
+| `SITE_URL` | `https://도메인` | 배포 후 외부에서 `/api/health` 확인 (선택) |
+
+동작:
+
+- main 에 push → lint·타입 검사·테스트·빌드 → 통과하면 서버 배포 → 서버 안 상태 확인 → (설정 시) 외부 상태 확인
+- 검사가 하나라도 실패하면 배포하지 않는다. 서버 상태 확인이 실패하면 이전 릴리스로 자동 되돌린다
+- 문서(`docs/`, `*.md`)만 바뀐 push 는 배포하지 않는다
+- 배포는 한 번에 하나씩, 연속 push 는 마지막 커밋만 배포된다
+- 끄려면 `AUTO_DEPLOY` 를 `false` 로 바꾼다 (수동 실행은 계속 가능)
+- `production` environment 에 Required reviewers 를 켜 두면 자동 배포도 승인 후 진행된다 (완전 자동을 원하면 끈다)
+
 ## 6. 운영 설정 바꾸기
 
 설정 파일: `/etc/partfinder/env` (형식·항목은 `deploy/env.production.template` 참고)
