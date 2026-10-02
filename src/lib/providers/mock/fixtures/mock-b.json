@@ -6,9 +6,18 @@
       "description": "[MOCK] 32-bit MCU, 64KB Flash, LQFP-48",
       "stock": 1200,
       "priceBreaks": [
-        { "minQty": 1, "unitPrice": 4.05 },
-        { "minQty": 50, "unitPrice": 3.5 },
-        { "minQty": 250, "unitPrice": 2.95 }
+        {
+          "minQty": 1,
+          "unitPrice": 4.05
+        },
+        {
+          "minQty": 50,
+          "unitPrice": 3.5
+        },
+        {
+          "minQty": 250,
+          "unitPrice": 2.95
+        }
       ],
       "moq": 1,
       "currency": "USD",
@@ -22,7 +31,12 @@
       "mpn": "MOCK-STOCK-ZERO",
       "description": "[MOCK] LDO Regulator 3.3V, SOT-223",
       "stock": 0,
-      "priceBreaks": [{ "minQty": 10, "unitPrice": 0.41 }],
+      "priceBreaks": [
+        {
+          "minQty": 10,
+          "unitPrice": 0.41
+        }
+      ],
       "moq": 10,
       "currency": "USD",
       "productUrl": "https://example.com/mock-b/item/MOCK-STOCK-ZERO",
@@ -35,7 +49,12 @@
       "mpn": "MOCK-LOW-STOCK",
       "description": "[MOCK] CAN Transceiver, SOIC-8",
       "stock": 12,
-      "priceBreaks": [{ "minQty": 1, "unitPrice": 2.1 }],
+      "priceBreaks": [
+        {
+          "minQty": 1,
+          "unitPrice": 2.1
+        }
+      ],
       "moq": 1,
       "currency": "USD",
       "productUrl": "https://example.com/mock-b/item/MOCK-LOW-STOCK",
@@ -55,5 +74,43 @@
       "lifecycle": "obsolete"
     }
   ],
-  "MOCK-PARTIAL-ERROR": { "error": "rate_limited" }
+  "MOCK-PARTIAL-ERROR": {
+    "error": "rate_limited"
+  },
+  "DEMO-OPA2358": [
+    {
+      "manufacturer": "Texas Instruments",
+      "mpn": "DEMO-OPA2358",
+      "description": "[DEMO] Dual Op-Amp, SOIC-8",
+      "stock": 350,
+      "priceBreaks": [
+        {
+          "minQty": 1,
+          "unitPrice": 1
+        }
+      ],
+      "moq": 1,
+      "currency": "USD",
+      "productUrl": "https://example.com/mock-b/p/DEMO-OPA2358",
+      "lifecycle": "eol"
+    }
+  ],
+  "DEMO-TPS5433": [
+    {
+      "manufacturer": "Texas Instruments",
+      "mpn": "DEMO-TPS5433",
+      "description": "[DEMO] Buck Converter 3A, SOIC-8",
+      "stock": 0,
+      "priceBreaks": [
+        {
+          "minQty": 1,
+          "unitPrice": 1
+        }
+      ],
+      "moq": 1,
+      "currency": "USD",
+      "productUrl": "https://example.com/mock-b/p/DEMO-TPS5433",
+      "lifecycle": "active"
+    }
+  ]
 }
