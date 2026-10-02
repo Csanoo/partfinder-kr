@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { resendNotificationAction, setInquiryStatusAction } from "@/app/admin/inquiries/actions";
+import { inquiryToFaqAction, resendNotificationAction, setInquiryStatusAction } from "@/app/admin/inquiries/actions";
 import { INQUIRY_STATUS_LABEL, INQUIRY_TYPE_LABEL, ITEM_BUCKET_LABEL, NOTIFY_LABEL, PURCHASE_LABEL } from "@/components/admin/labels";
-import { btnPrimary, Card } from "@/components/admin/ui";
+import { btnPrimary, btnSecondary, Card, first, Notice } from "@/components/admin/ui";
 import { TRAFFIC_LABEL, type TrafficSource } from "@/lib/attribution";
 import { db } from "@/lib/db";
 import { partPath } from "@/lib/parts/resolve-route";
@@ -22,6 +22,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 /** 문의 상세. 연락처·이메일은 메일 본문에 넣지 않고 이 화면에서만 확인한다 (docs/SPEC.md 6장) */
 export default async function InquiryDetailPage(props: PageProps<"/admin/inquiries/[id]">) {
   const { id } = await props.params;
+  const sp = await props.searchParams;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const q = await db().inquiry.findUnique({
     where: { id },
@@ -44,6 +45,7 @@ export default async function InquiryDetailPage(props: PageProps<"/admin/inquiri
       <h1 className="text-2xl font-bold">
         <span className="mpn">{q.mpn}</span> × {q.qty.toLocaleString("ko-KR")}
       </h1>
+      <Notice error={first(sp.error)} />
 
       <form action={setInquiryStatusAction.bind(null, q.id)} className="flex items-center gap-2">
         <select name="status" defaultValue={q.status} className="rounded-lg border border-line bg-surface px-3 py-2 text-sm">
@@ -113,15 +115,10 @@ export default async function InquiryDetailPage(props: PageProps<"/admin/inquiri
             </Row>
             <Row label="검색">{q.searchLog ? `"${q.searchLog.queryRaw}" (${fmt(q.searchLog.createdAt)})` : "-"}</Row>
           </dl>
-          {q.part && (
-            <p className="mt-2 text-xs text-muted">
-              FAQ 후보로 쓰려면{" "}
-              <Link href={`/admin/parts/${q.part.id}`} className="underline">
-                부품 편집
-              </Link>
-              에서 개인정보를 뺀 질문·답변으로 직접 추가하세요.
-            </p>
-          )}
+          <form action={inquiryToFaqAction.bind(null, q.id)} className="mt-3">
+            <button className={btnSecondary}>FAQ 후보로 보내기</button>
+            <p className="mt-1 text-xs text-muted">이메일·전화번호·이름·회사명을 지운 질문 초안을 만들고, 답변은 부품 편집 화면에서 씁니다 (미게시).</p>
+          </form>
         </Card>
       </div>
     </div>

@@ -4,6 +4,10 @@ import {
   addAlternativeAction,
   addFaqAction,
   addVariantAction,
+  applySummaryDraftAction,
+  discardSummaryDraftAction,
+  editFaqAction,
+  generateSummaryDraftAction,
   markReviewedAction,
   removeAlternativeAction,
   removeFaqAction,
@@ -30,7 +34,10 @@ import {
 } from "@/components/admin/ui";
 import { ManufacturerFactsPanel } from "@/components/admin/manufacturer-facts-panel";
 import type { PageStatus } from "@/generated/prisma/enums";
+import { faqPublishable } from "@/lib/inquiry/to-faq";
 import { sourceForManufacturer } from "@/lib/manufacturer/registry";
+import { findUnsupportedNumbers } from "@/lib/parts/summary-draft";
+import { summaryDraftEnabled } from "@/lib/parts/summary-draft-llm";
 import { db } from "@/lib/db";
 import { getQuality } from "@/lib/parts/admin";
 import { partPath } from "@/lib/parts/resolve-route";
@@ -67,6 +74,22 @@ export default async function EditPartPage(props: PageProps<"/admin/parts/[id]">
   const publicPath = partPath(part.manufacturer.slug, canonical);
   const editedAfterReview = part.reviewedAt != null && part.contentUpdatedAt > part.reviewedAt;
   const summaryLen = part.summaryKo ? charCount(part.summaryKo.trim()) : 0;
+  const draftEnabled = summaryDraftEnabled();
+  const draftWarnings = part.summaryDraftKo
+    ? findUnsupportedNumbers(part.summaryDraftKo, {
+        mpn: part.mpnDisplay,
+        manufacturer: part.manufacturer.nameEn,
+        category: categories.find((c) => c.id === part.categoryId)?.nameKo ?? null,
+        package: part.package,
+        keySpecs: Array.isArray(part.keySpecs) ? (part.keySpecs as { label: string; value: string }[]) : [],
+        lifecycle: part.lifecycleStatus,
+        lifecycleCheckedAt: part.lifecycleCheckedAt,
+        eolDate: part.eolDate,
+        verifiedAlternatives: part.alternatives
+          .filter((a) => a.verified)
+          .map((a) => ({ mpn: a.altPart?.mpnDisplay ?? a.altMpnText ?? "", relation: a.relation })),
+      })
+    : [];
 
   const transitions: { to: PageStatus; label: string }[] = (
     [
@@ -104,7 +127,7 @@ export default async function EditPartPage(props: PageProps<"/admin/parts/[id]">
         </div>
       </div>
 
-      <Notice error={first(sp.error)} message={first(sp.saved) ? "저장했습니다." : undefined} />
+      <Notice error={first(sp.error)} message={first(sp.message) || (first(sp.saved) ? "저장했습니다." : undefined)} />
 
       <div className="grid gap-5 lg:grid-cols-3">
         {/* ── 기본 정보 ── */}
@@ -190,6 +213,36 @@ export default async function EditPartPage(props: PageProps<"/admin/parts/[id]">
                 </li>
               ))}
             </ul>
+          </Card>
+
+          <Card title="요약 초안 (AI)">
+            <div className="space-y-2 text-sm">
+              {part.summaryDraftKo ? (
+                <>
+                  {draftWarnings.length > 0 && (
+                    <p className="rounded bg-copper-50 p-2 text-xs text-copper-700 dark:bg-copper-700/20 dark:text-copper-200">
+                      입력하지 않은 숫자: {draftWarnings.join(", ")} — 사실이 아니면 고치거나 지우세요.
+                    </p>
+                  )}
+                  <form action={applySummaryDraftAction.bind(null, part.id)} className="space-y-2">
+                    <textarea name="draft" rows={5} defaultValue={part.summaryDraftKo} className={inputCls} />
+                    <p className="text-xs text-muted">입력한 사실만 근거로 만든 초안입니다. 고친 뒤 적용하면 요약 칸을 대체합니다.</p>
+                    <button className={btnPrimary}>요약에 적용</button>
+                  </form>
+                  <form action={discardSummaryDraftAction.bind(null, part.id)}>
+                    <button className={btnDanger}>초안 버리기</button>
+                  </form>
+                </>
+              ) : (
+                <p className="text-xs text-muted">제조사·스펙·수명주기·검증된 대체품 등 입력한 사실만으로 2~3문장 초안을 만듭니다.</p>
+              )}
+              <form action={generateSummaryDraftAction.bind(null, part.id)}>
+                <button className={btnSecondary} disabled={!draftEnabled}>
+                  {part.summaryDraftKo ? "초안 다시 만들기" : "요약 초안 만들기"}
+                </button>
+              </form>
+              {!draftEnabled && <p className="text-xs text-muted">꺼져 있음: SUMMARY_DRAFT_ENABLED=true 와 ANTHROPIC_API_KEY 필요</p>}
+            </div>
           </Card>
 
           <Card title="제조사 공식 정보">
@@ -283,6 +336,7 @@ export default async function EditPartPage(props: PageProps<"/admin/parts/[id]">
       </Card>
 
       {/* ── FAQ ── */}
+      <div id="faq" />
       <Card title={`FAQ (게시 ${part.faqs.filter((f) => f.published).length} / ${part.faqs.length})`}>
         <p className="mb-3 text-xs text-muted">
           실제 문의에서 나온 질문이나 관리자가 직접 쓴 질문만 넣습니다. 템플릿으로 찍어 낸 FAQ는 금지입니다. 문의 내용의 개인정보는 옮기지 마세요.
@@ -292,11 +346,23 @@ export default async function EditPartPage(props: PageProps<"/admin/parts/[id]">
             <li key={f.id} className="rounded-lg border border-line p-3 text-sm">
               <p className="font-medium">Q. {f.questionKo}</p>
               <p className="mt-1 text-muted">A. {f.answerKo}</p>
+              <details className="mt-2">
+                <summary className="cursor-pointer text-xs text-brand-600 dark:text-brand-300">질문·답변 수정</summary>
+                <form action={editFaqAction.bind(null, part.id, f.id)} className="mt-2 space-y-2">
+                  <input name="questionKo" defaultValue={f.questionKo} required className={inputCls} />
+                  <textarea name="answerKo" defaultValue={f.answerKo} rows={3} required className={inputCls} />
+                  <button className={btnSecondary}>저장</button>
+                </form>
+              </details>
               <div className="mt-2 flex items-center gap-2">
                 <span className="text-xs text-muted">{f.source === "inquiry" ? "문의에서 전환" : "관리자 작성"}</span>
-                <form action={setFaqPublishedAction.bind(null, part.id, f.id, !f.published)}>
-                  <button className={btnSecondary}>{f.published ? "게시됨 → 내리기" : "게시하기"}</button>
-                </form>
+                {!f.published && !faqPublishable(f.answerKo) ? (
+                  <span className="text-xs text-copper-700 dark:text-copper-200">답변을 작성해야 게시할 수 있습니다</span>
+                ) : (
+                  <form action={setFaqPublishedAction.bind(null, part.id, f.id, !f.published)}>
+                    <button className={btnSecondary}>{f.published ? "게시됨 → 내리기" : "게시하기"}</button>
+                  </form>
+                )}
                 <form action={removeFaqAction.bind(null, part.id, f.id)}>
                   <button className={btnDanger}>삭제</button>
                 </form>

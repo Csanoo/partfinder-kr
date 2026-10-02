@@ -179,6 +179,9 @@ model Part {
   categoryId         String?       @map("category_id") @db.Uuid
   package            String?
   summaryKo          String?       @map("summary_ko")
+  /// LLM 요약 초안 (관리자가 적용하기 전까지 화면에 쓰이지 않음)
+  summaryDraftKo     String?       @map("summary_draft_ko")
+  summaryDraftAt     DateTime?     @map("summary_draft_at") @db.Timestamptz(3)
   /// [{label, value}] 관리자 입력
   keySpecs           Json          @default("[]") @map("key_specs")
   lifecycleStatus    PartLifecycle @default(unknown) @map("lifecycle_status")

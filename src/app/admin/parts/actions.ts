@@ -27,7 +27,10 @@ import { applyFacts } from "@/lib/manufacturer/apply";
 import { buildProposals, type Proposal, type ProposalField } from "@/lib/manufacturer/proposals";
 import { fetchManufacturerFacts } from "@/lib/manufacturer/registry";
 import type { ManufacturerFacts } from "@/lib/manufacturer/types";
+import { faqPublishable } from "@/lib/inquiry/to-faq";
 import { planImport, type ImportPlan } from "@/lib/parts/import-plan";
+import { findUnsupportedNumbers, type SummaryFacts } from "@/lib/parts/summary-draft";
+import { generateSummaryDraft, summaryDraftEnabled } from "@/lib/parts/summary-draft-llm";
 import { slugifyName } from "@/lib/parts/slug";
 import { parseDateOnly, parseKeySpecs, parseLifecycle, validateDatasheetUrl } from "@/lib/parts/validate-part";
 
@@ -168,6 +171,10 @@ export async function addFaqAction(partId: string, fd: FormData) {
 
 export async function setFaqPublishedAction(partId: string, faqId: string, published: boolean) {
   await requireAdmin();
+  if (published) {
+    const faq = await db().partFaq.findUnique({ where: { id: faqId }, select: { answerKo: true } });
+    if (!faq || !faqPublishable(faq.answerKo)) back(`/admin/parts/${partId}`, { error: "답변을 작성한 뒤 게시해 주세요." });
+  }
   await setFaqPublished(faqId, published);
   revalidatePath(`/admin/parts/${partId}`);
 }
@@ -336,4 +343,88 @@ export async function applyFactsAction(partId: string, _prev: FactsState, fd: Fo
   } catch (err) {
     return { status: "unavailable", message: err instanceof Error ? err.message : "반영 실패" };
   }
+}
+/** FAQ 질문·답변 수정. 게시 중인 FAQ 의 답변을 자리표시로 되돌리면 자동으로 내린다 */
+export async function editFaqAction(partId: string, faqId: string, fd: FormData) {
+  await requireAdmin();
+  const questionKo = str(fd, "questionKo");
+  const answerKo = str(fd, "answerKo");
+  if (!questionKo || !answerKo) back(`/admin/parts/${partId}`, { error: "질문과 답변을 입력해 주세요." });
+  const ok = faqPublishable(answerKo);
+  await db().partFaq.update({ where: { id: faqId }, data: { questionKo, answerKo, ...(ok ? {} : { published: false }) } });
+  // FAQ 는 화면·구조화 데이터에 나가므로 콘텐츠 수정 시각 갱신 + 색인 재계산
+  await setFaqPublished(faqId, ok ? (await db().partFaq.findUniqueOrThrow({ where: { id: faqId } })).published : false);
+  revalidatePath(`/admin/parts/${partId}`);
+  back(`/admin/parts/${partId}`, { saved: "1" });
+}
+
+// ── 요약 초안 (LLM, 선택 기능) ──
+
+async function summaryFacts(partId: string): Promise<SummaryFacts> {
+  const p = await db().part.findUniqueOrThrow({
+    where: { id: partId },
+    select: {
+      mpnDisplay: true,
+      package: true,
+      keySpecs: true,
+      lifecycleStatus: true,
+      lifecycleCheckedAt: true,
+      eolDate: true,
+      manufacturer: { select: { nameEn: true } },
+      category: { select: { nameKo: true } },
+      alternatives: {
+        where: { verified: true },
+        select: { relation: true, altMpnText: true, altPart: { select: { mpnDisplay: true } } },
+      },
+    },
+  });
+  return {
+    mpn: p.mpnDisplay,
+    manufacturer: p.manufacturer.nameEn,
+    category: p.category?.nameKo ?? null,
+    package: p.package,
+    keySpecs: Array.isArray(p.keySpecs) ? (p.keySpecs as { label: string; value: string }[]) : [],
+    lifecycle: p.lifecycleStatus,
+    lifecycleCheckedAt: p.lifecycleCheckedAt,
+    eolDate: p.eolDate,
+    verifiedAlternatives: p.alternatives.map((a) => ({ mpn: a.altPart?.mpnDisplay ?? a.altMpnText ?? "", relation: a.relation })),
+  };
+}
+
+export async function generateSummaryDraftAction(partId: string) {
+  await requireAdmin();
+  const path = `/admin/parts/${partId}`;
+  if (!summaryDraftEnabled()) back(path, { error: "요약 초안 기능이 꺼져 있습니다 (SUMMARY_DRAFT_ENABLED, Anthropic API 키)." });
+  const facts = await summaryFacts(partId);
+  const r = await generateSummaryDraft(facts);
+  if (!r.ok) back(path, { error: `요약 초안 생성 실패: ${r.reason}` });
+  await db().part.update({ where: { id: partId }, data: { summaryDraftKo: r.text, summaryDraftAt: new Date() } });
+  revalidatePath(path);
+  const unsupported = findUnsupportedNumbers(r.text, facts);
+  back(path, unsupported.length > 0 ? { error: `초안에 입력하지 않은 숫자가 있습니다: ${unsupported.join(", ")} — 확인 후 고쳐서 적용하세요.` } : { message: "요약 초안을 만들었습니다. 검토 후 적용하세요." });
+}
+
+/** 초안을 요약 칸에 적용 (관리자가 고친 내용 그대로). 적용 후 초안은 비운다 */
+export async function applySummaryDraftAction(partId: string, fd: FormData) {
+  await requireAdmin();
+  const text = str(fd, "draft");
+  if (!text) back(`/admin/parts/${partId}`, { error: "초안이 비어 있습니다." });
+  const p = await db().part.findUniqueOrThrow({
+    where: { id: partId },
+    select: { categoryId: true, package: true, keySpecs: true, lifecycleStatus: true, lifecycleCheckedAt: true, lifecycleSource: true, eolDate: true, datasheetUrl: true },
+  });
+  await updatePart(partId, {
+    ...p,
+    keySpecs: Array.isArray(p.keySpecs) ? (p.keySpecs as { label: string; value: string }[]) : [],
+    summaryKo: text,
+  });
+  await db().part.update({ where: { id: partId }, data: { summaryDraftKo: null, summaryDraftAt: null } });
+  revalidatePath(`/admin/parts/${partId}`);
+  back(`/admin/parts/${partId}`, { message: "초안을 요약에 적용했습니다. 검토 완료로 기록해야 색인 기준을 충족합니다." });
+}
+
+export async function discardSummaryDraftAction(partId: string) {
+  await requireAdmin();
+  await db().part.update({ where: { id: partId }, data: { summaryDraftKo: null, summaryDraftAt: null } });
+  revalidatePath(`/admin/parts/${partId}`);
 }
