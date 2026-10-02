@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 /** GET /api/availability?mpn= — 부품 페이지 정식 유통사 재고 (브라우저 측 호출) */
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  // TODO(확인필요): 배포 환경의 프록시 구성에 맞춰 신뢰할 IP 헤더 확정
+  // 배포: 같은 서버의 Caddy 가 X-Forwarded-For 를 클라이언트 IP 로 설정한다 (deploy/Caddyfile)
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
   const res = await getAvailability(url.searchParams.get("mpn"), req.headers.get("user-agent"), ip);
 

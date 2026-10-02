@@ -25,6 +25,11 @@ npm run mfr:fetch -- --limit=100   # 제조사 공식 정보 일괄 조회 (TI).
 
 처음 만들 때(이미 만들어져 있으면 생략): `initdb -D .pgdata -U partfinder --auth=scram-sha-256 --pwfile=<비밀번호 파일>` 후 `.env`에 `DATABASE_URL="postgresql://partfinder:<비밀번호>@localhost:5434/partfinder"`.
 
+## 배포
+
+AWS Lightsail 서버 1대 (Next.js standalone + PostgreSQL + Caddy). 절차는 [docs/DEPLOY.md](docs/DEPLOY.md).
+CI(`.github/workflows/ci.yml`)는 push 마다, 배포(`deploy.yml`)는 Actions 에서 수동 실행.
+
 ## 스크립트
 
 | 명령 | 설명 |

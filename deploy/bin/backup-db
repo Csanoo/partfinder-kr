@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# DB 백업 (postgres 사용자로 실행): 서버 안에 14일 보관.
+# S3 에도 보관하려면 /etc/partfinder/backup.env 에 BACKUP_S3_URI=s3://버킷/경로 를 두고 aws CLI 를 설치·인증한다 (선택).
+set -euo pipefail
+DIR=/var/backups/partfinder
+FILE="$DIR/partfinder-$(date -u +%Y%m%d-%H%M).sql.gz"
+pg_dump --no-owner partfinder | gzip -9 > "$FILE"
+find "$DIR" -name 'partfinder-*.sql.gz' -mtime +14 -delete
+if [[ -r /etc/partfinder/backup.env ]]; then
+  # shellcheck disable=SC1091
+  . /etc/partfinder/backup.env
+  if [[ -n "${BACKUP_S3_URI:-}" ]] && command -v aws >/dev/null; then
+    aws s3 cp "$FILE" "${BACKUP_S3_URI%/}/$(basename "$FILE")" --only-show-errors
+  fi
+fi

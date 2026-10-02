@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# 릴리스 활성화 (deploy 사용자가 sudo 로 실행): 압축 해제 → DB 마이그레이션 → 전환 → 재시작 → 상태 확인 → 실패 시 되돌리기
+#   sudo /opt/partfinder/bin/activate-release /opt/partfinder/incoming/release-<id>.tar.gz
+set -euo pipefail
+
+APP=/opt/partfinder
+KEEP=5
+TARBALL="${1:-}"
+
+# 인자 검증: incoming 폴더의 release-*.tar.gz 만
+[[ "$TARBALL" =~ ^/opt/partfinder/incoming/release-[A-Za-z0-9._-]+\.tar\.gz$ ]] || { echo "잘못된 릴리스 경로: $TARBALL" >&2; exit 2; }
+[[ -f "$TARBALL" ]] || { echo "파일 없음: $TARBALL" >&2; exit 2; }
+
+NAME="$(basename "$TARBALL" .tar.gz)"
+DEST="$APP/releases/$NAME"
+PREV="$(readlink -f "$APP/current" 2>/dev/null || true)"
+
+echo "==> 압축 해제: $DEST"
+rm -rf "$DEST" && mkdir -p "$DEST"
+tar -xzf "$TARBALL" -C "$DEST" --no-same-owner
+rm -f "$DEST/.env"* # 빌드 산출물에 로컬 .env 가 섞여 들어오지 않게
+chown -R root:partfinder "$DEST" && chmod -R u=rwX,g=rX,o= "$DEST"
+install -d -o partfinder -g partfinder "$DEST/.next/cache"
+
+echo "==> DB 마이그레이션"
+DATABASE_URL="$(grep -E '^DATABASE_URL=' /etc/partfinder/env | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//')"
+( cd "$APP/tools" && DATABASE_URL="$DATABASE_URL" PRISMA_SCHEMA="$DEST/prisma/schema.prisma" PRISMA_MIGRATIONS="$DEST/prisma/migrations" \
+    ./node_modules/.bin/prisma migrate deploy --config prisma.config.mjs )
+
+switch_to() {
+  ln -sfn "$1" "$APP/current.tmp" && mv -Tf "$APP/current.tmp" "$APP/current"
+  systemctl restart partfinder
+}
+healthy() {
+  for _ in $(seq 1 40); do
+    curl -fsS -m 3 http://127.0.0.1:3000/api/health >/dev/null 2>&1 && return 0
+    sleep 1
+  done
+  return 1
+}
+
+echo "==> 전환·재시작"
+switch_to "$DEST"
+if healthy; then
+  echo "==> 정상: $NAME"
+else
+  echo "!! 상태 확인 실패 — 이전 릴리스로 되돌립니다" >&2
+  journalctl -u partfinder -n 50 --no-pager >&2 || true
+  if [[ -n "$PREV" && -d "$PREV" ]]; then switch_to "$PREV"; fi
+  exit 1
+fi
+
+echo "==> 오래된 릴리스 정리 (최근 $KEEP 개 유지)"
+ls -1dt "$APP"/releases/*/ 2>/dev/null | tail -n +$((KEEP + 1)) | while read -r dir; do
+  [[ "$(readlink -f "$dir")" == "$(readlink -f "$APP/current")" ]] || rm -rf "$dir"
+done
+rm -f "$TARBALL"

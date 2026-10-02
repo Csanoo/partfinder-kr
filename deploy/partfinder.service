@@ -1,0 +1,27 @@
+[Unit]
+Description=MS전자 (partfinder-kr) Next.js
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=partfinder
+Group=partfinder
+WorkingDirectory=/opt/partfinder/current
+EnvironmentFile=/etc/partfinder/env
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+# 2GB 서버: DB·Caddy 몫을 남긴다
+MemoryMax=1200M
+Environment=NODE_OPTIONS=--max-old-space-size=900
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+StandardOutput=append:/var/log/partfinder/app.log
+StandardError=append:/var/log/partfinder/app.log
+
+[Install]
+WantedBy=multi-user.target

@@ -71,7 +71,7 @@ export default async function SettingsPage(props: PageProps<"/admin/settings">) 
       <Card title="기타">
         <div className="space-y-2 text-sm">
           <Status ok={!site.url.includes("localhost")}>
-            사이트 주소: <b>{site.url}</b> — {env("NEXT_PUBLIC_SITE_URL")} (메일의 관리자 링크·사이트맵에 쓰임)
+            사이트 주소: <b>{site.url}</b> — {env("SITE_URL")} (메일의 관리자 링크·사이트맵에 쓰임)
           </Status>
           <Status ok={retention != null}>
             개인정보 보유기간: <b>{retention != null ? `${retention}일` : "미설정 (파기 작업이 아무것도 지우지 않음)"}</b> — {env("PERSONAL_DATA_RETENTION_DAYS")}

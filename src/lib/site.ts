@@ -3,6 +3,11 @@ export const site = {
   name: "MS전자",
   legalName: "MinSuk 전자",
   description: "전자부품 품번(MPN)으로 유통사별 재고와 단종 여부를 확인하고 견적·소싱을 문의하세요.",
-  // TODO(확인필요): 배포 도메인
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-} as const;
+  /**
+   * 정규 사이트 주소 (canonical, 사이트맵, 메일의 관리자 링크).
+   * 서버 실행 시점에 읽도록 NEXT_PUBLIC_ 접두어를 쓰지 않는다 (빌드 시 고정되는 것을 피함).
+   */
+  get url(): string {
+    return (process.env.SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+  },
+};

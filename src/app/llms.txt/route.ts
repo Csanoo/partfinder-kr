@@ -1,6 +1,8 @@
 import { absoluteUrl } from "@/lib/seo/part-url";
 import { site } from "@/lib/site";
 
+export const dynamic = "force-dynamic";
+
 /** AI 답변 엔진용 사이트 안내 (llms.txt 관례). */
 export function GET() {
   const body = `# ${site.name} (${site.legalName})

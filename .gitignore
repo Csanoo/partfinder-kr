@@ -49,3 +49,7 @@ next-env.d.ts
 
 # dev server log
 /.next-dev.log
+
+# release packages / local prod logs
+/release-*.tar.gz
+/.next-prod.log

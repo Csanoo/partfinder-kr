@@ -1,0 +1,10 @@
+/var/log/partfinder/*.log {
+	weekly
+	rotate 8
+	compress
+	delaycompress
+	missingok
+	notifempty
+	copytruncate
+	su partfinder partfinder
+}

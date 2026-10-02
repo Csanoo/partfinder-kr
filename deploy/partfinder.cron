@@ -1,0 +1,12 @@
+# /etc/cron.d/partfinder — 서버 시간대 UTC 기준 (한국 시간 = UTC+9)
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# 03:10 KST 색인 가능 여부 재계산 + 일별 기록
+10 18 * * * partfinder /opt/partfinder/bin/cron-call recompute-indexable
+# 03:20 KST 개인정보 보유기간 경과분 파기 (PERSONAL_DATA_RETENTION_DAYS 없으면 아무것도 안 함)
+20 18 * * * partfinder /opt/partfinder/bin/cron-call purge-personal-data
+# 03:30 KST 제조사 공식 정보 조회 (초안·검토 중 부품, 결과는 관리자 검토 대기)
+30 18 * * * partfinder /opt/partfinder/bin/cron-call manufacturer-facts
+# 04:00 KST DB 백업
+0 19 * * * postgres /opt/partfinder/bin/backup-db

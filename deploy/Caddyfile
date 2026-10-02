@@ -1,0 +1,27 @@
+# /etc/caddy/Caddyfile (setup-server.sh 가 __DOMAIN__ 을 바꿔 설치). HTTPS 인증서는 Caddy 가 자동 발급·갱신한다.
+{
+	# 로그는 journalctl -u caddy 로 확인
+}
+
+__DOMAIN__ {
+	encode zstd gzip
+
+	# 정기 작업 API 는 서버 안(cron)에서만 호출한다
+	@cron path /api/cron/*
+	respond @cron 404
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "SAMEORIGIN"
+		-Server
+	}
+
+	# Caddy 는 외부에서 보낸 X-Forwarded-For 를 믿지 않고 실제 클라이언트 IP 로 설정한다 (앱의 IP 기준 제한이 이 값을 쓴다)
+	reverse_proxy 127.0.0.1:3000
+}
+
+www.__DOMAIN__ {
+	redir https://__DOMAIN__{uri} permanent
+}

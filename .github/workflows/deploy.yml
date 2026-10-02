@@ -1,0 +1,61 @@
+name: Deploy
+
+# 수동 실행만 (Actions 탭 → Deploy → Run workflow). 검사를 모두 통과해야 서버에 올린다.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx next build
+
+      - name: 릴리스 묶음
+        id: pkg
+        run: |
+          ID="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
+          bash deploy/build-release.sh "$ID"
+          echo "file=release-${ID}.tar.gz" >> "$GITHUB_OUTPUT"
+
+      - name: SSH 준비
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          # 서버 호스트 키 고정 (중간자 공격 방지)
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts && chmod 644 ~/.ssh/known_hosts
+
+      - name: 업로드·활성화
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          FILE: ${{ steps.pkg.outputs.file }}
+        run: |
+          SSH="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes deploy@${DEPLOY_HOST}"
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "$FILE" "deploy@${DEPLOY_HOST}:/opt/partfinder/incoming/$FILE"
+          $SSH "sudo /opt/partfinder/bin/activate-release /opt/partfinder/incoming/$FILE"
+
+      - name: 정리
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

@@ -20,7 +20,7 @@ export interface InquiryFormState {
 
 async function handle(type: InquiryType, formData: FormData): Promise<InquiryFormState> {
   const h = await headers();
-  // TODO(확인필요): 배포 환경의 프록시 구성에 맞춰 신뢰할 IP 헤더 확정
+  // 배포: 같은 서버의 Caddy 가 X-Forwarded-For 를 클라이언트 IP 로 설정한다 (외부에서 보낸 값은 신뢰하지 않음, deploy/Caddyfile)
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
 
   const jar = await cookies();

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# 정기 작업 호출: /etc/cron.d/partfinder 에서 partfinder 사용자로 실행
+#   cron-call recompute-indexable | purge-personal-data | manufacturer-facts
+set -euo pipefail
+JOB="${1:?작업 이름}"
+[[ "$JOB" =~ ^[a-z-]+$ ]] || exit 2
+SECRET="$(grep -E '^CRON_SECRET=' /etc/partfinder/env | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//')"
+{
+  echo "[$(date -u +%FT%TZ)] $JOB"
+  curl -sS -m 1000 -X POST -H "Authorization: Bearer ${SECRET}" "http://127.0.0.1:3000/api/cron/${JOB}" || echo "실패"
+  echo
+} >> /var/log/partfinder/cron.log 2>&1

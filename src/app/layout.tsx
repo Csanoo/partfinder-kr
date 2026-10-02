@@ -16,6 +16,9 @@ const plexKr = IBM_Plex_Sans_KR({
 });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap" });
 
+// 모든 페이지를 요청 시점에 렌더링: DB·환경변수(SITE_URL 등)를 빌드 시점에 고정하지 않기 위함
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: { default: `${site.name} | 전자부품 품번 검색`, template: `%s | ${site.name}` },
