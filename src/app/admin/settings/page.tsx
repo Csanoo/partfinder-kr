@@ -2,7 +2,7 @@ import { sendTestMailAction } from "@/app/admin/settings/actions";
 import { btnSecondary, Card, first, Notice } from "@/components/admin/ui";
 import { recipientsFor } from "@/lib/inquiry/notify";
 import { retentionDays } from "@/lib/inquiry/retention";
-import { getMailer } from "@/lib/mail/mailer";
+import { getMailer, mailProvider } from "@/lib/mail/mailer";
 import { site } from "@/lib/site";
 
 function Status({ ok, children }: { ok: boolean; children: React.ReactNode }) {
@@ -35,8 +35,18 @@ export default async function SettingsPage(props: PageProps<"/admin/settings">) 
       <Card title="문의 알림 메일">
         <div className="space-y-3 text-sm">
           <Status ok={mailer.id !== "console"}>
-            발송 방식: <b>{mailer.id === "console" ? "콘솔 출력 (개발용, 실제 발송 없음)" : mailer.id}</b> — {env("MAIL_PROVIDER")}
+            발송 방식: <b>{mailer.id === "console" ? "콘솔 출력 (개발용, 실제 발송 없음)" : mailer.id === "resend" ? "Resend" : mailer.id}</b> — {env("MAIL_PROVIDER")}
           </Status>
+          {mailProvider() === "resend" && (
+            <>
+              <Status ok={!!process.env.RESEND_API_KEY?.trim()}>
+                Resend API 키: <b>{process.env.RESEND_API_KEY?.trim() ? "설정됨" : "미설정"}</b> — {env("RESEND_API_KEY")}
+              </Status>
+              <Status ok={!!process.env.MAIL_FROM?.trim()}>
+                발신 주소: <b>{process.env.MAIL_FROM?.trim() || "미설정"}</b> — {env("MAIL_FROM")} (Resend 에서 도메인 인증 필요)
+              </Status>
+            </>
+          )}
           <Status ok={quote.length > 0}>
             견적 문의 수신: <b>{quote.join(", ") || "미설정"}</b> — {env("NOTIFY_EMAIL_QUOTE")}
           </Status>

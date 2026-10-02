@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildNotification, notifyInquiry, recipientsFor, type NotifyInquiry } from "@/lib/inquiry/notify";
-import { ConsoleMailer, getMailer, type Mailer } from "@/lib/mail/mailer";
+import { ConsoleMailer, getMailer, ResendMailer, type Mailer, type MailMessage, type ResendLike } from "@/lib/mail/mailer";
 import { submitInquiry } from "@/lib/inquiry/submit";
 import { ProviderRateLimiter } from "@/lib/providers/rate-limiter";
 
@@ -152,8 +152,63 @@ describe("getMailer", () => {
     expect(out[0]).toContain("Subject: S");
   });
 
-  it("연결되지 않은 서비스는 발송 시 실패 (저장에는 영향 없음)", async () => {
+  it("지원하지 않는 서비스는 발송 시 실패 (저장에는 영향 없음)", async () => {
     vi.stubEnv("MAIL_PROVIDER", "ses");
-    await expect(getMailer().send({ to: ["x@y.z"], subject: "s", text: "t" })).rejects.toThrow(/연결되지 않았습니다/);
+    await expect(getMailer().send({ to: ["x@y.z"], subject: "s", text: "t" })).rejects.toThrow(/지원하지 않는/);
+  });
+
+  it("resend: 키나 발신 주소가 없으면 발송 시 실패", async () => {
+    vi.stubEnv("MAIL_PROVIDER", "resend");
+    vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("MAIL_FROM", "MS전자 <noreply@ms.example>");
+    await expect(getMailer().send({ to: ["x@y.z"], subject: "s", text: "t" })).rejects.toThrow(/RESEND_API_KEY/);
+    vi.stubEnv("RESEND_API_KEY", "re_test");
+    vi.stubEnv("MAIL_FROM", "");
+    await expect(getMailer().send({ to: ["x@y.z"], subject: "s", text: "t" })).rejects.toThrow(/MAIL_FROM/);
+    vi.stubEnv("MAIL_FROM", "MS전자 <noreply@ms.example>");
+    expect(getMailer().id).toBe("resend");
+  });
+});
+
+describe("ResendMailer", () => {
+  function fakeResend(result: { data: unknown; error: { name: string; message: string } | null }) {
+    const send = vi.fn(async () => result);
+    return { client: { emails: { send } } as unknown as ResendLike, send };
+  }
+
+  it("발신 주소·수신·제목·본문과 idempotency 키를 그대로 넘긴다", async () => {
+    const { client, send } = fakeResend({ data: { id: "e1" }, error: null });
+    await new ResendMailer("re_test", "MS전자 <noreply@ms.example>", client).send({
+      to: ["ops@ms.example"],
+      subject: "[소싱 문의] X x 1",
+      text: "본문",
+      idempotencyKey: "inquiry-notify/abc",
+    });
+    expect(send).toHaveBeenCalledWith(
+      { from: "MS전자 <noreply@ms.example>", to: ["ops@ms.example"], subject: "[소싱 문의] X x 1", text: "본문" },
+      { idempotencyKey: "inquiry-notify/abc" },
+    );
+  });
+
+  it("Resend 가 error 를 돌려주면 예외로 바꿔 재시도·실패 기록이 동작하게 한다", async () => {
+    const { client } = fakeResend({ data: null, error: { name: "validation_error", message: "domain not verified" } });
+    await expect(new ResendMailer("re_test", "a@b.c", client).send({ to: ["x@y.z"], subject: "s", text: "t" })).rejects.toThrow(
+      "Resend validation_error: domain not verified",
+    );
+  });
+
+  it("알림은 문의마다 고정 idempotency 키로 보낸다 (재시도 중복 방지)", async () => {
+    vi.stubEnv("NOTIFY_EMAIL_SOURCING", "ops@ms.example");
+    const sent: MailMessage[] = [];
+    let n = 0;
+    const mailer: Mailer = {
+      id: "fake",
+      async send(m) {
+        sent.push(m);
+        if (n++ === 0) throw new Error("timeout");
+      },
+    };
+    await notifyInquiry(q, { mailer, setStatus: async () => {}, adminBaseUrl: "https://ms.example", log: () => {} });
+    expect(sent.map((m) => m.idempotencyKey)).toEqual([`inquiry-notify/${q.id}`, `inquiry-notify/${q.id}`]);
   });
 });

@@ -73,7 +73,8 @@ export async function notifyInquiry(q: NotifyInquiry, deps: NotifyDeps): Promise
   if (to.length === 0) {
     log(`[notify] ${q.id}: 수신 주소 미설정 (NOTIFY_EMAIL_${q.type === "quote" ? "QUOTE" : "SOURCING"})`);
   } else {
-    const message = { to, ...buildNotification(q, deps.adminBaseUrl) };
+    // 문의마다 고정 키: 재시도·재발송이 겹쳐도 같은 메일이 두 번 가지 않는다 (Resend 기준 24시간)
+    const message = { to, ...buildNotification(q, deps.adminBaseUrl), idempotencyKey: `inquiry-notify/${q.id}` };
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         await deps.mailer.send(message);

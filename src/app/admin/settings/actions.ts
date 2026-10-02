@@ -12,16 +12,19 @@ export async function sendTestMailAction(type: "quote" | "sourcing") {
   const label = type === "quote" ? "견적 문의" : "소싱 문의";
   if (to.length === 0) redirect(`/admin/settings?error=${encodeURIComponent(`${label} 수신 주소가 설정되지 않았습니다.`)}`);
   let ok = true;
+  let reason = "";
   try {
     await getMailer().send({
       to,
       subject: `[${label}] 테스트 x 1`,
       text: `알림 메일 테스트입니다. (요청: ${admin}, ${new Date().toISOString()})\n실제 문의가 아니므로 무시하세요.`,
+      idempotencyKey: `test-mail/${type}/${crypto.randomUUID()}`,
     });
   } catch (err) {
     console.error("[settings] test mail failed:", err);
     ok = false;
+    reason = err instanceof Error ? err.message : String(err);
   }
-  const msg = ok ? `${label} 테스트 메일을 보냈습니다 → ${to.join(", ")}` : `${label} 테스트 메일 발송에 실패했습니다. 서버 로그를 확인하세요.`;
+  const msg = ok ? `${label} 테스트 메일을 보냈습니다 → ${to.join(", ")}` : `${label} 테스트 메일 발송 실패: ${reason}`;
   redirect(`/admin/settings?${ok ? "message" : "error"}=${encodeURIComponent(msg)}`);
 }
