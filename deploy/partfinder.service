@@ -1,5 +1,5 @@
 [Unit]
-Description=MS전자 (partfinder-kr) Next.js
+Description=MS유통 (partfinder-kr) Next.js
 After=network-online.target postgresql.service
 Wants=network-online.target
 Requires=postgresql.service

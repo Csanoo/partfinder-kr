@@ -38,7 +38,7 @@ export function Logo() {
       <LogoMark size={30} />
       <span className="text-lg font-bold tracking-tight">
         <span className="text-brand-600 dark:text-brand-300">MS</span>
-        <span>전자</span>
+        <span>유통</span>
       </span>
       <span className="sr-only">({site.legalName})</span>
     </span>

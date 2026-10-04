@@ -95,7 +95,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <p>
               본 사이트는 독립 운영되며, 소싱 문의는 협력 브로커를 통해 처리됩니다. 제조사·정식 유통사와 무관합니다.
             </p>
-            <p>© {site.legalName}</p>
+            <p>
+              상호: {site.legalName} ({site.business.nameEn}) · 사업자등록번호: {site.business.registrationNo}
+            </p>
+            <p>
+              © {site.business.since} {site.legalName}. All rights reserved.
+            </p>
           </div>
         </footer>
       </body>
