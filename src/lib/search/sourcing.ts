@@ -1,6 +1,6 @@
 import type { Offer, ProviderResult } from "@/lib/providers/types";
 
-/** 브로커 소싱 문의를 강조하는 이유. */
+/** 소싱 문의를 강조하는 이유. */
 export type SourcingReason =
   /** 모든 유통사에서 검색 결과 없음 */
   | "no_results"
@@ -19,7 +19,7 @@ export interface SourcingSignals {
 const DISCONTINUED: ReadonlySet<Offer["lifecycle"]> = new Set(["nrnd", "eol", "obsolete"]);
 
 /**
- * 브로커 소싱 문의 강조 조건 판정.
+ * 소싱 문의 강조 조건 판정.
  * 이 결과는 C 영역의 강조 여부에만 쓰이며, 정식 유통사 결과(A)의 순서·표시에는 영향을 주지 않는다.
  */
 export function evaluateSourcingSignals(allResults: ProviderResult[], qty: number | null): SourcingSignals {

@@ -57,7 +57,7 @@ describe("summarizeAvailability", () => {
     expect(json).not.toMatch(/12345|9\.99|price|"stock"|"qty"/i);
   });
 
-  it("브로커 결과는 넣지 않는다", () => {
+  it("소싱 소스 결과는 넣지 않는다", () => {
     expect(summarizeAvailability([ok([offer({ providerName: "Broker" })], "broker")])).toEqual([]);
   });
 });

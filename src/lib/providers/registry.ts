@@ -23,7 +23,7 @@ const entries: ProviderEntry[] = [
   },
   {
     enabled: providerFlags.mock,
-    create: () => new MockProvider("mock-broker", "Mock 브로커", mockBrokerFixture as MockFixture, "broker"),
+    create: () => new MockProvider("mock-broker", "Mock 소싱", mockBrokerFixture as MockFixture, "broker"),
   },
   {
     enabled: providerFlags.mouser,

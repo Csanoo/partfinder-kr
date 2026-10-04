@@ -7,7 +7,7 @@ import { LIFECYCLE_TEXT, manufacturerLabel, RELATION_TEXT, ymd, type PartPageMod
 
 /** SEO_SPEC 제약 6. TODO(확인필요): 정확한 문구 */
 export const OPERATOR_NOTICE =
-  "본 사이트는 독립 운영되며, 소싱 문의는 협력 브로커를 통해 처리됩니다. 제조사·정식 유통사와 무관합니다.";
+  "본 사이트는 독립 운영되며, 소싱 문의는 협력 업체를 통해 처리됩니다. 제조사·정식 유통사와 무관합니다.";
 
 const lifecycleTone: Record<PartPageModel["lifecycle"]["status"], string> = {
   active: "bg-pcb-50 text-pcb-700 dark:bg-pcb-700/25 dark:text-pcb-100",

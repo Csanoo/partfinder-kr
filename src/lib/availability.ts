@@ -62,7 +62,7 @@ export async function getAvailability(
   if (mpn === "" || mpn.length > 64) return { kind: "invalid" };
   if (!(deps.limiter ?? defaultLimiter).tryAcquire(`avail:${ip}`, AVAILABILITY_IP_POLICY).ok) return { kind: "rate_limited" };
 
-  // 정식 유통사 Provider만 호출 (브로커 소스는 부품 페이지에서 쓰지 않음)
+  // 정식 유통사 Provider만 호출 (소싱 소스는 부품 페이지에서 쓰지 않음)
   const providers = (deps.providers ?? getEnabledProviders()).filter((p) => p.kind === "authorized");
   const results = await searchParts(toSearchQuery(mpn), { ...deps.search, providers });
   return { kind: "ok", mpn, rows: summarizeAvailability(results) };

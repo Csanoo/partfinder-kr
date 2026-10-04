@@ -3,7 +3,7 @@
     {
       "manufacturer": "Mock Semiconductor",
       "mpn": "MOCK-STOCK-ZERO",
-      "description": "[MOCK] 브로커 재고 게시",
+      "description": "[MOCK] 외부 재고 게시",
       "stock": 2500,
       "priceBreaks": [],
       "moq": null,
@@ -16,7 +16,7 @@
     {
       "manufacturer": "Mock Semiconductor",
       "mpn": "MOCK-NRND",
-      "description": "[MOCK] 브로커 재고 게시",
+      "description": "[MOCK] 외부 재고 게시",
       "stock": 1800,
       "priceBreaks": [],
       "moq": null,
@@ -29,7 +29,7 @@
     {
       "manufacturer": "Mock Semiconductor",
       "mpn": "MOCK-LOW-STOCK",
-      "description": "[MOCK] 브로커 재고 게시",
+      "description": "[MOCK] 외부 재고 게시",
       "stock": null,
       "priceBreaks": [],
       "moq": null,
