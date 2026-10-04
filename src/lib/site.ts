@@ -6,7 +6,6 @@ export const site = {
   business: {
     nameEn: "MS Electric Co. LTD",
     registrationNo: "184-98-01814",
-    address: "서울특별시 서초구 사평대로28길 31, 3동 607호 (반포동, 한신서래아파트)",
     since: 2026,
   },
   description: "전자부품 품번(MPN)으로 유통사별 재고와 단종 여부를 확인하고 견적·소싱을 문의하세요.",
