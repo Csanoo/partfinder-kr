@@ -70,7 +70,7 @@ describe("결과 화면 A/B/C 영역", () => {
     expect(html.indexOf("Broker Z")).toBeGreaterThan(html.indexOf('id="sourcing-inquiry-heading"'));
     expect(html).toContain("99,999개 게시");
     expect(html).toContain('href="https://example.com/brk/X-1"');
-    // 브로커 가격은 표시하지 않는다
+    // 소싱 소스 가격은 표시하지 않는다
     expect(html).not.toContain("US$0.01");
     // authorized 재고가 모두 0이므로 broker 재고와 무관하게 강조
     expect(html).toContain('data-emphasized="true"');

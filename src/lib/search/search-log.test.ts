@@ -23,7 +23,7 @@ describe("toSearchLogRecord", () => {
       queryNormalized: "ULN2003A",
       qty: 10,
       resultCountByProvider: { a: 1, b: 0, c: null, z: 1 },
-      hasAnyStock: false, // 브로커 재고 500은 반영하지 않음
+      hasAnyStock: false, // 소싱 소스 재고 500은 반영하지 않음
       sessionId: "sid",
       source: "search",
     });

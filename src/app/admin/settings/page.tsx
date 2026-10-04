@@ -54,7 +54,7 @@ export default async function SettingsPage(props: PageProps<"/admin/settings">) 
             소싱 문의 수신: <b>{sourcing.join(", ") || "미설정"}</b> — {env("NOTIFY_EMAIL_SOURCING")}
           </Status>
           <p className="text-xs text-muted">
-            두 값이 없으면 {env("NOTIFY_EMAIL")} 를 공통으로 씁니다. 여러 주소는 쉼표로 구분합니다. 수신자는 운영자로 한정하며 브로커 등 제3자에게 자동 발송하지 않습니다.
+            두 값이 없으면 {env("NOTIFY_EMAIL")} 를 공통으로 씁니다. 여러 주소는 쉼표로 구분합니다. 수신자는 운영자로 한정하며 외부 업체 등 제3자에게 자동 발송하지 않습니다.
           </p>
           <div className="flex flex-wrap gap-2">
             <form action={sendTestMailAction.bind(null, "quote")}>

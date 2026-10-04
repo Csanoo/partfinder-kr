@@ -12,7 +12,7 @@ const faq = [
   {
     question: "정식 유통사에 재고가 없으면 어떻게 하나요?",
     answer:
-      "견적 문의 또는 브로커 소싱 문의를 남길 수 있습니다. 브로커 소싱은 정식 유통 경로가 아니며, 정품 보증·반품 조건이 정식 유통사와 다릅니다.",
+      "견적 문의 또는 소싱 문의를 남길 수 있습니다. 소싱 부품은 정식 유통 경로가 아니며, 정품 보증·반품 조건이 정식 유통사와 다릅니다.",
   },
   {
     question: "재고 정보는 실시간인가요?",
@@ -111,7 +111,7 @@ export default function Home() {
             {[
               "제조사 품번(MPN)과 필요 수량을 입력합니다.",
               "정식 유통사별 재고와 단종 여부를 확인합니다.",
-              "필요하면 견적 문의나 브로커 소싱 문의를 남깁니다.",
+              "필요하면 견적 문의나 소싱 문의를 남깁니다.",
             ].map((step, i) => (
               <li key={step} className="flex gap-3">
                 <span className="mpn flex size-7 shrink-0 items-center justify-center rounded-md bg-copper-500 text-sm font-bold text-white">

@@ -5,7 +5,7 @@ import type { ProviderResult } from "@/lib/providers/types";
 import { evaluateSourcingSignals } from "@/lib/search/sourcing";
 
 /**
- * 결과 화면 영역 배치. A(정식 유통사) → B(견적 문의) → C(브로커 소싱) 순서 고정.
+ * 결과 화면 영역 배치. A(정식 유통사) → B(견적 문의) → C(소싱) 순서 고정.
  * 문의 영역은 항상 A 아래에 두어 정식 유통사 결과를 가리거나 순서를 바꾸지 않는다.
  */
 export function SearchResultSections({

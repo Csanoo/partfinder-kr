@@ -5,7 +5,7 @@ import type { ProviderResult } from "@/lib/providers/types";
 import type { SourcingReason, SourcingSignals } from "@/lib/search/sourcing";
 
 export const SOURCING_DISCLAIMER =
-  "브로커 소싱은 정식 유통 경로가 아니며, 정품 보증·반품 조건이 정식 유통사와 다릅니다.";
+  "소싱 부품은 정식 유통 경로가 아니며, 정품 보증·반품 조건이 정식 유통사와 다릅니다.";
 
 const reasonLabel: Record<SourcingReason, string> = {
   no_results: "정식 유통사 검색 결과가 없습니다.",
@@ -15,7 +15,7 @@ const reasonLabel: Record<SourcingReason, string> = {
 };
 
 /**
- * C. 브로커 소싱 문의. 정식 유통사 결과(A)와 시각적으로 분리된 별도 박스.
+ * C. 소싱 문의. 정식 유통사 결과(A)와 시각적으로 분리된 별도 박스.
  * 강조 조건에 해당하면 테두리·배경으로 강조하되, A를 가리거나 순서를 바꾸지 않는다.
  */
 export function SourcingInquiryBox({
@@ -43,7 +43,7 @@ export function SourcingInquiryBox({
     >
       <div className="mb-1 flex items-center gap-2">
         <h2 id="sourcing-inquiry-heading" className="font-semibold">
-          브로커 소싱 문의
+          소싱 문의
         </h2>
         {signals.emphasize && (
           <span className="rounded-full bg-copper-500 px-2 py-0.5 text-[11px] font-bold text-white">소싱 권장</span>
@@ -82,7 +82,7 @@ export function SourcingInquiryBox({
 
 /**
  * 시장 재고 참고 (broker 소스). 출처(소스명·조회 시각·링크)를 함께 표시한다.
- * 가격은 표시하지 않는다. TODO(확인필요): 브로커 소스 가격 표시 여부
+ * 가격은 표시하지 않는다. TODO(확인필요): 소싱 소스 가격 표시 여부
  */
 function BrokerListings({ results }: { results: ProviderResult[] }) {
   const offers = results.flatMap((r) => (r.status === "ok" ? r.offers : []));
@@ -91,7 +91,7 @@ function BrokerListings({ results }: { results: ProviderResult[] }) {
     <div className="mb-4 rounded-lg border border-line bg-surface p-3" data-testid="broker-listings">
       <h3 className="mb-1 text-sm font-semibold">시장 재고 참고</h3>
       <p className="mb-2 text-xs text-muted">
-        브로커가 게시한 재고 정보로, 실제 재고·정품 여부는 확인되지 않았습니다.
+        외부 시장에 게시된 재고 정보로, 실제 재고·정품 여부는 확인되지 않았습니다.
       </p>
       <ul className="space-y-1 text-sm">
         {offers.map((o) => (

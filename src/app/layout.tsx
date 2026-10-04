@@ -93,7 +93,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <div className="mx-auto max-w-6xl space-y-2 px-4 py-6 text-xs text-muted">
             {/* TODO(확인필요): 운영 주체 고지 정확한 문구 (SEO 명세 제약 6) */}
             <p>
-              본 사이트는 독립 운영되며, 소싱 문의는 협력 브로커를 통해 처리됩니다. 제조사·정식 유통사와 무관합니다.
+              본 사이트는 독립 운영되며, 소싱 문의는 협력 업체를 통해 처리됩니다. 제조사·정식 유통사와 무관합니다.
             </p>
             <p>
               상호: {site.legalName} ({site.business.nameEn}) · 사업자등록번호: {site.business.registrationNo}
