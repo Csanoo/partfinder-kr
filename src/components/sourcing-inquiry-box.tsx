@@ -37,8 +37,8 @@ export function SourcingInquiryBox({
       data-emphasized={signals.emphasize}
       className={
         signals.emphasize
-          ? "flex flex-col rounded-xl border-2 border-copper-400 bg-copper-50 p-5 dark:border-copper-500 dark:bg-copper-700/15"
-          : "flex flex-col rounded-xl border border-dashed border-line bg-surface p-5"
+          ? "flex flex-col rounded-md border border-copper-300 bg-copper-50/50 p-5 dark:border-copper-600 dark:bg-copper-700/10"
+          : "flex flex-col rounded-md border border-line bg-surface p-5"
       }
     >
       <div className="mb-1 flex items-center gap-2">
@@ -46,7 +46,7 @@ export function SourcingInquiryBox({
           소싱 문의
         </h2>
         {signals.emphasize && (
-          <span className="rounded-full bg-copper-500 px-2 py-0.5 text-[11px] font-bold text-white">소싱 권장</span>
+          <span className="rounded bg-copper-100 px-1.5 py-0.5 text-[11px] font-semibold text-copper-700 dark:bg-copper-700/30 dark:text-copper-200">소싱 권장</span>
         )}
       </div>
 
@@ -70,8 +70,8 @@ export function SourcingInquiryBox({
         href={inquiryHref("/inquiry/sourcing", mpn, qty, searchLogId)}
         className={
           signals.emphasize
-            ? "mt-auto inline-flex w-fit items-center rounded-lg bg-copper-500 px-4 py-2 text-sm font-semibold text-white hover:bg-copper-600"
-            : "mt-auto inline-flex w-fit items-center rounded-lg border border-copper-400 px-4 py-2 text-sm font-semibold text-copper-700 hover:bg-copper-50 dark:text-copper-200 dark:hover:bg-copper-700/20"
+            ? "mt-auto inline-flex w-fit items-center rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+            : "mt-auto inline-flex w-fit items-center rounded-md border border-brand-600 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 dark:border-brand-400 dark:text-brand-200 dark:hover:bg-brand-900/40"
         }
       >
         소싱 문의하기
@@ -88,7 +88,7 @@ function BrokerListings({ results }: { results: ProviderResult[] }) {
   const offers = results.flatMap((r) => (r.status === "ok" ? r.offers : []));
   if (offers.length === 0) return null;
   return (
-    <div className="mb-4 rounded-lg border border-line bg-surface p-3" data-testid="broker-listings">
+    <div className="mb-4 rounded-md border border-line bg-surface p-3" data-testid="broker-listings">
       <h3 className="mb-1 text-sm font-semibold">시장 재고 참고</h3>
       <p className="mb-2 text-xs text-muted">
         외부 시장에 게시된 재고 정보로, 실제 재고·정품 여부는 확인되지 않았습니다.

@@ -85,7 +85,7 @@ export default async function AdminPartsPage(props: PageProps<"/admin/parts">) {
 
       <Notice error={first(sp.error)} message={first(sp.message)} />
 
-      <form className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm">
+      <form className="flex flex-wrap items-center gap-2 rounded-md border border-line bg-surface p-3 text-sm">
         <input name="q" defaultValue={q} placeholder="품번 검색" className={`${inputCls} w-48`} />
         <select name="status" defaultValue={status} className={`${inputCls} w-32`}>
           <option value="">상태 전체</option>
@@ -113,7 +113,7 @@ export default async function AdminPartsPage(props: PageProps<"/admin/parts">) {
           </span>
           <button className={btnPrimary}>선택 항목 게시 (최대 {BULK_PUBLISH_LIMIT}건)</button>
         </div>
-        <div className="overflow-x-auto rounded-xl border border-line bg-surface">
+        <div className="overflow-x-auto rounded-md border border-line bg-surface">
           <table className="w-full min-w-[820px] text-sm">
             <thead>
               <tr className="border-b border-line text-left text-xs text-muted">

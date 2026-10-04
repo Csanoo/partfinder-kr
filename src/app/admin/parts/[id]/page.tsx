@@ -343,7 +343,7 @@ export default async function EditPartPage(props: PageProps<"/admin/parts/[id]">
         </p>
         <ul className="mb-4 space-y-3">
           {part.faqs.map((f) => (
-            <li key={f.id} className="rounded-lg border border-line p-3 text-sm">
+            <li key={f.id} className="rounded-md border border-line p-3 text-sm">
               <p className="font-medium">Q. {f.questionKo}</p>
               <p className="mt-1 text-muted">A. {f.answerKo}</p>
               <details className="mt-2">

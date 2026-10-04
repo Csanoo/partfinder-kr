@@ -17,7 +17,7 @@ interface Props {
 }
 
 const input =
-  "w-full rounded-lg border border-line bg-surface px-3 py-2 outline-none focus-visible:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-200 dark:focus-visible:ring-brand-800 aria-[invalid=true]:border-red-500";
+  "w-full rounded-md border border-line bg-surface px-3 py-2 outline-none focus-visible:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-200 dark:focus-visible:ring-brand-800 aria-[invalid=true]:border-red-500";
 
 export function InquiryForm({ type, action, defaults, consent, compact = false }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
@@ -35,7 +35,7 @@ export function InquiryForm({ type, action, defaults, consent, compact = false }
   return (
     <form
       action={formAction}
-      className={compact ? "space-y-4 text-sm" : "space-y-6 rounded-xl border border-line bg-surface p-6"}
+      className={compact ? "space-y-4 text-sm" : "space-y-6 rounded-md border border-line bg-surface p-6"}
       onFocusCapture={onFirstFocus}
       noValidate
     >
@@ -143,7 +143,7 @@ export function InquiryForm({ type, action, defaults, consent, compact = false }
       <button
         type="submit"
         disabled={pending}
-        className={`w-full rounded-lg px-5 py-3 font-semibold text-white disabled:opacity-50 sm:w-auto ${type === "quote" ? "bg-brand-600 hover:bg-brand-700" : "bg-copper-500 hover:bg-copper-600"}`}
+        className={`w-full rounded-md px-5 py-3 font-semibold text-white disabled:opacity-50 sm:w-auto bg-brand-600 hover:bg-brand-700`}
       >
         {pending ? "접수 중…" : type === "quote" ? "견적 문의 접수" : "소싱 문의 접수"}
       </button>
@@ -190,7 +190,7 @@ function Field({
 function Consent({ name, text, label, checked, error }: { name: string; text: string; label: string; checked: boolean; error?: string }) {
   return (
     <div>
-      <pre className="mb-2 max-h-40 overflow-auto whitespace-pre-wrap rounded-lg border border-line bg-background p-3 font-sans text-xs text-muted">
+      <pre className="mb-2 max-h-40 overflow-auto whitespace-pre-wrap rounded-md border border-line bg-background p-3 font-sans text-xs text-muted">
         {text}
       </pre>
       <label className="inline-flex items-center gap-2 text-sm">

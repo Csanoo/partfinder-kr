@@ -6,7 +6,7 @@ export default function ImportPage() {
   return (
     <div className="max-w-4xl space-y-4">
       <h1 className="text-xl font-bold">CSV 가져오기</h1>
-      <div className="rounded-xl border border-line bg-surface p-4 text-sm text-muted">
+      <div className="rounded-md border border-line bg-surface p-4 text-sm text-muted">
         <ul className="list-disc space-y-1 pl-5">
           <li>
             필수 열: <code className="mpn">mpn</code>, <code className="mpn">manufacturer</code>. 선택: category, package,

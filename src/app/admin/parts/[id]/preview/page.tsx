@@ -14,7 +14,7 @@ export default async function PreviewPage(props: PageProps<"/admin/parts/[id]/pr
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-brand-300 bg-brand-50 p-3 text-sm dark:border-brand-700 dark:bg-brand-900/30">
+      <div className="rounded-md border border-brand-300 bg-brand-50 p-3 text-sm dark:border-brand-700 dark:bg-brand-900/30">
         <p className="font-semibold">미리보기 · {part.indexable ? "색인 대상" : "noindex"}</p>
         <p className="mpn mt-1 text-xs">title: {buildTitle(part)}</p>
         <p className="mt-1 text-xs">description: {buildDescription(part.summaryKo) || "(요약 없음)"}</p>

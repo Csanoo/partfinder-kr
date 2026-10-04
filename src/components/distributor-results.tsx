@@ -18,7 +18,7 @@ export function DistributorResults({ results: allResults }: { results: ProviderR
   const statusRows = results.filter((r) => r.status !== "ok");
 
   return (
-    <section aria-labelledby="distributor-results-heading" className="rounded-xl border border-line bg-surface">
+    <section aria-labelledby="distributor-results-heading" className="rounded-md border border-line bg-surface">
       <div className="flex items-center justify-between border-b border-line px-5 py-3">
         <h2 id="distributor-results-heading" className="font-semibold">
           정식 유통사 결과

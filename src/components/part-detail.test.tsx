@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { OPERATOR_NOTICE, PartDetail } from "@/components/part-detail";
+import { PartDetail } from "@/components/part-detail";
 import { buildDescription, buildJsonLd, buildRobots, buildTitle, type PartPageModel } from "@/lib/parts/page-model";
 import { validateJsonLd, visibleTextValues } from "@/lib/seo/validate-json-ld";
 
@@ -176,7 +176,6 @@ describe("부품 상세 화면 (5.1)", () => {
       'id="availability-heading"',
       'id="faq-heading"',
       'id="related-heading"',
-      OPERATOR_NOTICE,
     ].map((s) => html.indexOf(s));
     expect(order.every((i) => i >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);

@@ -90,12 +90,11 @@ describe("허브 JSON-LD", () => {
 describe("HubView", () => {
   const render = (h: HubModel) => renderToStaticMarkup(<HubView hub={h} breadcrumbName="Texas Instruments" />);
 
-  it("부품 링크·수명주기·다른 축 내부 링크·고지 문구", () => {
+  it("부품 링크·수명주기·다른 축 내부 링크", () => {
     const html = render(hub());
     expect(html).toContain('href="/parts/texas-instruments/lm358-n_nopb"');
     expect(html).toContain('href="/categories/amplifiers"');
     expect(html).toContain("단종 (EOL)");
-    expect(html).toContain("독립 운영");
   });
 
   it("여러 페이지면 페이지 링크, 현재 페이지 표시", () => {

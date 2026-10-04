@@ -13,11 +13,11 @@ function Group({ title, base, items }: { title: string; base: string; items: Hub
   if (items.length === 0) return null;
   return (
     <div>
-      <h3 className="mb-2 text-sm font-semibold text-muted">{title}</h3>
+      <h3 className="mb-2 text-xs font-semibold text-muted">{title}</h3>
       <ul className="flex flex-wrap gap-2">
         {items.map((i) => (
           <li key={i.slug}>
-            <Link href={`${base}/${i.slug}`} className="inline-block rounded-full border border-line bg-surface px-3 py-1 text-sm hover:border-brand-400">
+            <Link href={`${base}/${i.slug}`} className="inline-block rounded-md border border-line bg-surface px-2.5 py-1 text-sm hover:border-brand-500 hover:text-brand-700 dark:hover:text-brand-200">
               {i.label} <span className="text-muted">{i.count}</span>
             </Link>
           </li>
@@ -57,7 +57,7 @@ export async function HubLinks() {
   return (
     <section aria-labelledby="browse-heading" className="space-y-4">
       <div className="flex items-baseline justify-between">
-        <h2 id="browse-heading" className="text-xl font-bold">
+        <h2 id="browse-heading" className="text-base font-bold">
           부품 둘러보기
         </h2>
         <Link href="/eol" className="text-sm text-brand-600 hover:underline dark:text-brand-300">

@@ -24,7 +24,7 @@ export default async function NewPartPage(props: PageProps<"/admin/parts/new">) 
           해 주세요.
         </p>
       ) : (
-        <form action={createPartAction} className="space-y-4 rounded-xl border border-line bg-surface p-5">
+        <form action={createPartAction} className="space-y-4 rounded-md border border-line bg-surface p-5">
           <Field label="품번 (원본 표기 그대로)" hint="대소문자·공백·하이픈만 다른 품번은 같은 부품으로 봅니다.">
             <input name="mpnDisplay" required className={`${inputCls} mpn`} />
           </Field>

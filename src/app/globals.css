@@ -1,58 +1,58 @@
 @import "tailwindcss";
 
 /*
- * MS유통 디자인 토큰
- * - brand: 회로기판(PCB) 솔더마스크에서 따온 짙은 청록
- * - copper: 패드·리드의 구리색 (포인트, 소싱 강조)
- * - pcb: 재고 있음 등 긍정 상태의 기판 녹색
+ * MS유통 디자인 토큰 — 업무용 도구 톤: 무채색 바탕 + 남색 포인트 하나
+ * - brand: 남색 (링크·버튼·선택 상태)
+ * - copper: 주의·확인 필요 상태에만 쓰는 황갈색 (장식용으로 쓰지 않는다)
+ * - pcb: 재고 있음 등 긍정 상태의 녹색
  */
 @theme {
-  --color-brand-50: #eef8fb;
-  --color-brand-100: #d4eef5;
-  --color-brand-200: #a8dbe9;
-  --color-brand-300: #6fc0d8;
-  --color-brand-400: #359fc0;
-  --color-brand-500: #1b85a8;
-  --color-brand-600: #0f6d8f;
-  --color-brand-700: #0d5874;
-  --color-brand-800: #0d4659;
-  --color-brand-900: #0b3343;
-  --color-brand-950: #071f29;
+  --color-brand-50: #f0f3f9;
+  --color-brand-100: #dde4f1;
+  --color-brand-200: #bccae3;
+  --color-brand-300: #8fa5cf;
+  --color-brand-400: #5f7db6;
+  --color-brand-500: #3a5c9c;
+  --color-brand-600: #24467f;
+  --color-brand-700: #1c3866;
+  --color-brand-800: #172d52;
+  --color-brand-900: #122340;
+  --color-brand-950: #0b1628;
 
-  --color-copper-50: #fdf5ee;
-  --color-copper-100: #f9e4d1;
-  --color-copper-200: #f1c49f;
-  --color-copper-300: #e7a06b;
-  --color-copper-400: #d98244;
-  --color-copper-500: #c4692b;
-  --color-copper-600: #a6531f;
-  --color-copper-700: #85401b;
+  --color-copper-50: #fbf7ee;
+  --color-copper-100: #f4ead2;
+  --color-copper-200: #e6d1a1;
+  --color-copper-300: #d3b26b;
+  --color-copper-400: #b8913f;
+  --color-copper-500: #94722c;
+  --color-copper-600: #785b22;
+  --color-copper-700: #5c4519;
 
-  --color-pcb-50: #edf9f1;
-  --color-pcb-100: #d2f0dc;
-  --color-pcb-500: #23955a;
-  --color-pcb-600: #1a7a49;
-  --color-pcb-700: #16613c;
+  --color-pcb-50: #eef7f1;
+  --color-pcb-100: #d3ecdc;
+  --color-pcb-500: #23824f;
+  --color-pcb-600: #1b6b41;
+  --color-pcb-700: #165636;
 
   --font-sans: var(--font-plex-kr), system-ui, -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Consolas, monospace;
 }
 
 :root {
-  --background: #f6f8f9;
+  --background: #f5f6f7;
   --surface: #ffffff;
-  --foreground: #14202a;
-  --muted: #5b6b77;
-  --line: #dde4e8;
+  --foreground: #1b1f24;
+  --muted: #5d6670;
+  --line: #e1e4e8;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #071a22;
-    --surface: #0c2530;
-    --foreground: #e3edf1;
-    --muted: #93a8b3;
-    --line: #1b3a47;
+    --background: #111316;
+    --surface: #181b1f;
+    --foreground: #e6e8eb;
+    --muted: #98a1ab;
+    --line: #2a2f35;
   }
 }
 
@@ -68,15 +68,6 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-}
-
-/* 회로 패턴 배경 (홈 상단). 장식용이라 저대비로 둔다. */
-.bg-circuit {
-  background-color: var(--color-brand-950);
-  background-image:
-    radial-gradient(circle at 1px 1px, rgb(53 159 192 / 0.18) 1px, transparent 0),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='none' stroke='%23359fc0' stroke-opacity='0.16' stroke-width='1.5'%3E%3Cpath d='M0 40h40l20 20h40l20-20h40'/%3E%3Cpath d='M0 120h30l15-15h50l15 15h50'/%3E%3Cpath d='M80 0v30l-15 15v30'/%3E%3Cpath d='M130 160v-35l15-15v-30'/%3E%3C/g%3E%3Cg fill='%23d98244' fill-opacity='0.35'%3E%3Ccircle cx='60' cy='60' r='3'/%3E%3Ccircle cx='100' cy='60' r='3'/%3E%3Ccircle cx='45' cy='105' r='3'/%3E%3Ccircle cx='65' cy='75' r='3'/%3E%3Ccircle cx='145' cy='110' r='3'/%3E%3C/g%3E%3C/svg%3E");
-  background-size: 22px 22px, 160px 160px;
 }
 
 input[type="radio"],
