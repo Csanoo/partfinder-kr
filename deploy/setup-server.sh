@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# MS전자 (partfinder-kr) 서버 1대 초기 설정 — Ubuntu 24.04 LTS (AWS Lightsail 2GB 권장)
+# MS유통 (partfinder-kr) 서버 1대 초기 설정 — Ubuntu 24.04 LTS (AWS Lightsail 2GB 권장)
 #
 #   sudo bash setup-server.sh --domain example.com
 #

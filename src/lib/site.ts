@@ -1,7 +1,7 @@
 /** 사이트 브랜드 정보. 화면·메타데이터·구조화 데이터에서 공통으로 쓴다. */
 export const site = {
-  name: "MS전자",
-  legalName: "MinSuk 전자",
+  name: "MS유통",
+  legalName: "MinSuk 유통",
   description: "전자부품 품번(MPN)으로 유통사별 재고와 단종 여부를 확인하고 견적·소싱을 문의하세요.",
   /**
    * 정규 사이트 주소 (canonical, 사이트맵, 메일의 관리자 링크).

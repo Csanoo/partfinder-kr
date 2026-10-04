@@ -160,12 +160,12 @@ describe("getMailer", () => {
   it("resend: 키나 발신 주소가 없으면 발송 시 실패", async () => {
     vi.stubEnv("MAIL_PROVIDER", "resend");
     vi.stubEnv("RESEND_API_KEY", "");
-    vi.stubEnv("MAIL_FROM", "MS전자 <noreply@ms.example>");
+    vi.stubEnv("MAIL_FROM", "MS유통 <noreply@ms.example>");
     await expect(getMailer().send({ to: ["x@y.z"], subject: "s", text: "t" })).rejects.toThrow(/RESEND_API_KEY/);
     vi.stubEnv("RESEND_API_KEY", "re_test");
     vi.stubEnv("MAIL_FROM", "");
     await expect(getMailer().send({ to: ["x@y.z"], subject: "s", text: "t" })).rejects.toThrow(/MAIL_FROM/);
-    vi.stubEnv("MAIL_FROM", "MS전자 <noreply@ms.example>");
+    vi.stubEnv("MAIL_FROM", "MS유통 <noreply@ms.example>");
     expect(getMailer().id).toBe("resend");
   });
 });
@@ -178,14 +178,14 @@ describe("ResendMailer", () => {
 
   it("발신 주소·수신·제목·본문과 idempotency 키를 그대로 넘긴다", async () => {
     const { client, send } = fakeResend({ data: { id: "e1" }, error: null });
-    await new ResendMailer("re_test", "MS전자 <noreply@ms.example>", client).send({
+    await new ResendMailer("re_test", "MS유통 <noreply@ms.example>", client).send({
       to: ["ops@ms.example"],
       subject: "[소싱 문의] X x 1",
       text: "본문",
       idempotencyKey: "inquiry-notify/abc",
     });
     expect(send).toHaveBeenCalledWith(
-      { from: "MS전자 <noreply@ms.example>", to: ["ops@ms.example"], subject: "[소싱 문의] X x 1", text: "본문" },
+      { from: "MS유통 <noreply@ms.example>", to: ["ops@ms.example"], subject: "[소싱 문의] X x 1", text: "본문" },
       { idempotencyKey: "inquiry-notify/abc" },
     );
   });
