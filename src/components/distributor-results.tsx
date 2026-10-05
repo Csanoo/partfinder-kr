@@ -19,7 +19,7 @@ export function DistributorResults({ results: allResults }: { results: ProviderR
 
   return (
     <section aria-labelledby="distributor-results-heading" className="rounded-md border border-line bg-surface">
-      <div className="flex items-center justify-between border-b border-line px-5 py-3">
+      <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
         <h2 id="distributor-results-heading" className="font-semibold">
           정식 유통사 결과
         </h2>
@@ -31,10 +31,17 @@ export function DistributorResults({ results: allResults }: { results: ProviderR
       ) : (
         <>
           {offers.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[860px] border-collapse text-sm">
+            <ul className="divide-y divide-line md:hidden">
+              {offers.map((offer) => (
+                <OfferCard key={`${offer.providerId}:${offer.productUrl}`} offer={offer} />
+              ))}
+            </ul>
+          )}
+          {offers.length > 0 && (
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full border-collapse text-sm">
                 <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-muted">
+                  <tr className="bg-background text-left text-xs text-muted">
                     <th className="px-5 py-2 font-medium">유통사</th>
                     <th className="px-3 py-2 font-medium">제조사 / 품번</th>
                     <th className="px-3 py-2 font-medium">설명</th>
@@ -56,14 +63,14 @@ export function DistributorResults({ results: allResults }: { results: ProviderR
           )}
 
           {statusRows.length > 0 && (
-            <ul className="flex flex-wrap gap-2 border-t border-line px-5 py-3 text-xs">
+            <ul className="flex flex-wrap gap-2 border-t border-line px-5 py-2.5 text-xs">
               {statusRows.map((r) => (
                 <li
                   key={r.providerId}
                   className={
                     r.status === "no_results"
-                      ? "rounded-full bg-zinc-100 px-3 py-1 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                      : "rounded-full bg-copper-50 px-3 py-1 text-copper-700 dark:bg-copper-700/20 dark:text-copper-200"
+                      ? "rounded bg-zinc-100 px-2 py-1 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                      : "rounded bg-copper-50 px-2 py-1 text-copper-700 dark:bg-copper-700/20 dark:text-copper-200"
                   }
                 >
                   <span className="font-semibold">{r.providerName}</span> ·{" "}
@@ -91,25 +98,19 @@ function StockBadge({ stock }: { stock: number | null }) {
   if (stock == null) return <span className="text-muted">-</span>;
   if (stock === 0) {
     return (
-      <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-        <span className="size-1.5 rounded-full bg-zinc-400" />
-        재고 없음
-      </span>
+      <span className="whitespace-nowrap text-xs text-muted">재고 없음</span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-pcb-50 px-2 py-0.5 text-xs font-semibold text-pcb-700 dark:bg-pcb-700/25 dark:text-pcb-100">
-      <span className="size-1.5 rounded-full bg-pcb-500" />
-      {formatInt(stock)}
-    </span>
+    <span className="mpn whitespace-nowrap font-semibold tabular-nums text-pcb-700 dark:text-pcb-100">{formatInt(stock)}</span>
   );
 }
 
 function OfferRow({ offer }: { offer: Offer }) {
   return (
-    <tr className="border-t border-line align-middle hover:bg-brand-50/50 dark:hover:bg-brand-900/20">
-      <td className="whitespace-nowrap px-5 py-3 font-semibold">{offer.providerName}</td>
-      <td className="px-3 py-3">
+    <tr className="border-t border-line align-middle hover:bg-background">
+      <td className="whitespace-nowrap px-5 py-2.5 font-semibold">{offer.providerName}</td>
+      <td className="px-3 py-2.5">
         <div className="whitespace-nowrap text-muted">{offer.manufacturer}</div>
         <div className="mpn font-medium">{offer.mpn}</div>
         {offer.lifecycle !== "active" && offer.lifecycle !== "unknown" && (
@@ -118,18 +119,18 @@ function OfferRow({ offer }: { offer: Offer }) {
           </span>
         )}
       </td>
-      <td className="px-3 py-3">
+      <td className="px-3 py-2.5">
         <div className="flex items-center gap-2">
           <PackageIllustration info={parsePackage(offer.description)} size={36} />
           <span className="text-muted">{offer.description}</span>
         </div>
       </td>
-      <td className="px-3 py-3 text-right">
+      <td className="px-3 py-2.5 text-right">
         <StockBadge stock={offer.stock} />
       </td>
-      <td className="mpn px-3 py-3 text-right text-muted">{offer.moq == null ? "-" : formatInt(offer.moq)}</td>
-      <td className="whitespace-nowrap px-3 py-3 text-xs text-muted">{formatFetchedAt(offer.fetchedAt)}</td>
-      <td className="px-5 py-3 text-right">
+      <td className="mpn px-3 py-2.5 text-right text-muted">{offer.moq == null ? "-" : formatInt(offer.moq)}</td>
+      <td className="whitespace-nowrap px-3 py-2.5 text-xs text-muted">{formatFetchedAt(offer.fetchedAt)}</td>
+      <td className="px-5 py-2.5 text-right">
         <a
           href={offer.productUrl}
           target="_blank"
@@ -140,5 +141,35 @@ function OfferRow({ offer }: { offer: Offer }) {
         </a>
       </td>
     </tr>
+  );
+}
+
+/** 좁은 화면용: 표 대신 유통사별 한 덩어리 (재고가 화면 밖으로 밀리지 않게) */
+function OfferCard({ offer }: { offer: Offer }) {
+  return (
+    <li className="space-y-1 px-4 py-3 text-sm">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="font-semibold">{offer.providerName}</span>
+        <StockBadge stock={offer.stock} />
+      </div>
+      <div className="flex flex-wrap items-center gap-x-2">
+        <span className="mpn font-medium">{offer.mpn}</span>
+        <span className="text-muted">{offer.manufacturer}</span>
+        {offer.lifecycle !== "active" && offer.lifecycle !== "unknown" && (
+          <span className="rounded bg-copper-100 px-1.5 py-0.5 text-[11px] font-semibold text-copper-700 dark:bg-copper-700/30 dark:text-copper-200">
+            {lifecycleLabel[offer.lifecycle]}
+          </span>
+        )}
+      </div>
+      <p className="text-muted">{offer.description}</p>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 text-xs text-muted">
+        <span>
+          MOQ {offer.moq == null ? "-" : formatInt(offer.moq)} · {formatFetchedAt(offer.fetchedAt)}
+        </span>
+        <a href={offer.productUrl} target="_blank" rel="noopener noreferrer nofollow" className="text-sm text-brand-600 hover:underline dark:text-brand-300">
+          상품 페이지 ↗
+        </a>
+      </div>
+    </li>
   );
 }

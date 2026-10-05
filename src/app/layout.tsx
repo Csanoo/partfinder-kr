@@ -71,7 +71,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Logo />
             </Link>
             <nav aria-label="주 메뉴" className="flex items-center gap-1 text-sm">
-              <Link href="/" className="rounded-md px-3 py-1.5 text-muted hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-900/40 dark:hover:text-brand-200">
+              <Link href="/" className="hidden sm:inline-block rounded-md px-3 py-1.5 text-muted hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-900/40 dark:hover:text-brand-200">
                 부품 검색
               </Link>
               <Link href="/eol" className="rounded-md px-3 py-1.5 text-muted hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-900/40 dark:hover:text-brand-200">

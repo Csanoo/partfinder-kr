@@ -15,8 +15,8 @@ const lifecycleTone: Record<PartPageModel["lifecycle"]["status"], string> = {
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section aria-labelledby={id} className="rounded-md border border-line bg-surface p-5">
-      <h2 id={id} className="mb-3 text-lg font-bold">
+    <section aria-labelledby={id} className="rounded-md border border-line bg-surface p-4 sm:p-5">
+      <h2 id={id} className="mb-3 text-base font-bold">
         {title}
       </h2>
       {children}
@@ -41,7 +41,7 @@ export function PartDetail({
   const lc = part.lifecycle;
 
   return (
-    <article className="space-y-6">
+    <article className="space-y-5">
       {/* 경로 */}
       <nav aria-label="경로" className="text-sm text-muted">
         <ol className="flex flex-wrap gap-1">
@@ -83,8 +83,8 @@ export function PartDetail({
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-        <div className="space-y-6">
+      <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
+        <div className="space-y-4">
           {/* 3. 기본 정보 */}
           <Section id="info-heading" title="기본 정보">
             <table className="w-full text-sm">
