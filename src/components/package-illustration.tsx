@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import type { PackageInfo } from "@/lib/package/parse-package";
+import type { Locale } from "@/i18n/config";
+import { fmt, getDictionary } from "@/i18n";
 
 /**
  * 패키지 일러스트 (직접 그린 SVG, 위에서 본 모양).
@@ -277,30 +279,32 @@ function draw(info: PackageInfo): ReactNode {
   }
 }
 
-export function PackageIllustration({ info, size = 120 }: { info: PackageInfo; size?: number }) {
+export function PackageIllustration({ info, size = 120, locale = "ko" }: { info: PackageInfo; size?: number; locale?: Locale }) {
+  const t = getDictionary(locale).pkg;
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 120 120"
       role="img"
-      aria-label={`${info.label} 패키지 일러스트`}
+      aria-label={fmt(t.figure, { label: info.label })}
       className="shrink-0"
     >
-      <title>{`${info.label} 패키지 (일러스트)`}</title>
+      <title>{fmt(t.figureTitle, { label: info.label })}</title>
       {draw(info)}
     </svg>
   );
 }
 
 /** 일러스트 + 패키지명 캡션 */
-export function PackageFigure({ info, size = 120 }: { info: PackageInfo; size?: number }) {
+export function PackageFigure({ info, size = 120, locale = "ko" }: { info: PackageInfo; size?: number; locale?: Locale }) {
+  const t = getDictionary(locale).pkg;
   return (
     <figure className="inline-flex flex-col items-center gap-1 rounded-md border border-line bg-surface p-3">
-      <PackageIllustration info={info} size={size} />
+      <PackageIllustration info={info} size={size} locale={locale} />
       <figcaption className="mpn text-xs text-muted">
         {info.label}
-        {info.family !== "unknown" && <span className="sr-only"> (실제 제품 사진 아님)</span>}
+        {info.family !== "unknown" && <span className="sr-only">{t.notPhoto}</span>}
       </figcaption>
     </figure>
   );

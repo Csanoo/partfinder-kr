@@ -26,6 +26,21 @@ ${site.name}는 필요한 전자부품을 찾아서 공급하는 부품 요청 �
 - 단종·수급 주의 부품 목록: ${absoluteUrl("/eol")}
 - 홈 (재고 조회): ${absoluteUrl("/")}
 
+## Languages
+
+- 한국어: ${absoluteUrl("/")}
+- English: ${absoluteUrl("/en")}
+- 日本語: ${absoluteUrl("/ja")}
+- Español: ${absoluteUrl("/es")}
+
+## English summary
+
+${site.nameIntl} (${site.business.nameEn}) is a parts request service that finds and supplies the electronic components you need.
+Send a manufacturer part number (MPN) and quantity, or a BOM file: we check authorized distributor stock first, then search suppliers
+in Korea and abroad for out-of-stock, discontinued (EOL), NRND and shortage parts, and reply with price, lead time and source.
+If a part cannot be supplied, we suggest pin-compatible alternatives. Requests and quotes are free.
+Request parts: ${absoluteUrl("/en/request")}
+
 ## 데이터 안내
 
 - 재고 정보는 조회 시점의 유통사 데이터이며 출처(유통사명)와 조회 시각을 함께 표기합니다. 가격은 표시하지 않습니다.

@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { PartDetail } from "@/components/part-detail";
+import { localizePart } from "@/lib/parts/page-model";
 import { buildDescription, buildJsonLd, buildRobots, buildTitle, type PartPageModel } from "@/lib/parts/page-model";
 import { validateJsonLd, visibleTextValues } from "@/lib/seo/validate-json-ld";
 
@@ -28,13 +29,14 @@ function model(over: Partial<PartPageModel> = {}): PartPageModel {
     },
     datasheetUrl: "https://www.ti.com/lit/ds/symlink/lm158-n.pdf",
     alternatives: [
-      { mpn: "LM358BIDR", manufacturerName: "Texas Instruments", path: "/parts/texas-instruments/lm358bidr", relation: "drop_in", noteKo: "핀 배치 동일", verified: true },
-      { mpn: "MCP6002-I/SN", manufacturerName: null, path: null, relation: "similar", noteKo: null, verified: false },
+      { id: "alt-1", mpn: "LM358BIDR", manufacturerName: "Texas Instruments", path: "/parts/texas-instruments/lm358bidr", relation: "drop_in", noteKo: "핀 배치 동일", verified: true },
+      { id: "alt-2", mpn: "MCP6002-I/SN", manufacturerName: null, path: null, relation: "similar", noteKo: null, verified: false },
     ],
     faqs: [{ questionKo: "LM358-N/NOPB 대체품이 있나요?", answerKo: "핀 호환 대체품으로 LM358BIDR이 확인되어 있습니다." }],
     related: [{ mpn: "LM324-N/NOPB", manufacturerName: "Texas Instruments", path: "/parts/texas-instruments/lm324-n_nopb" }],
     path: "/parts/texas-instruments/lm358-n_nopb",
     indexable: true,
+    translation: "original",
     ...over,
   };
 }
@@ -215,5 +217,44 @@ describe("부품 상세 화면 (5.1)", () => {
     const h1 = /<h1[^>]*>([\s\S]*?)<\/h1>/.exec(render(model()))![1];
     expect(visibleText(h1)).toContain("LM358-N/NOPB");
     expect(visibleText(h1)).toContain("Texas Instruments");
+  });
+});
+
+describe("다른 언어 화면", () => {
+  const renderIn = (p: PartPageModel, locale: "en" | "ja") =>
+    renderToStaticMarkup(<PartDetail part={p} availability={<div>AVAIL</div>} sourcingForm={<div>FORM</div>} locale={locale} />);
+
+  it("영어: 번역된 요약·FAQ·대체품 비고와 영어 화면 문구, 링크에 /en 접두어", () => {
+    const en = localizePart(model(), "en", {
+      summary: "LM358-N/NOPB is a dual op-amp.",
+      specs: [{ label: "Channels", value: "2" }, { label: "Supply voltage", value: "3~32 V" }, { label: "Bandwidth", value: "0.7 MHz" }],
+      faqs: [{ q: "Is there an alternative to LM358-N/NOPB?", a: "LM358BIDR is a verified pin-compatible alternative." }],
+      altNotes: { "alt-1": "Same pinout" },
+      method: "machine",
+    });
+    const html = renderIn(en, "en");
+    expect(html).toContain("LM358-N/NOPB is a dual op-amp.");
+    expect(html).toContain("Same pinout");
+    expect(html).toContain("Is there an alternative to LM358-N/NOPB?");
+    expect(html).toContain("Details");
+    expect(html).toContain('href="/en/manufacturers/texas-instruments"');
+    expect(html).toContain('href="/en/parts/texas-instruments/lm358bidr"');
+    expect(html).toContain("machine-translated");
+    expect(html).not.toContain("기본 정보");
+  });
+
+  it("번역이 없으면 한국어 원문 + 안내 문구", () => {
+    const ja = localizePart(model(), "ja", null);
+    expect(ja.translation).toBe("missing");
+    const html = renderIn(ja, "ja");
+    expect(html).toContain("基本情報");
+    expect(html).toContain(model().summaryKo!.slice(0, 10));
+    expect(html).toContain("まだ翻訳されていない");
+  });
+
+  it("개수가 어긋난 번역 항목은 원문을 쓴다 (원문 변경 후 재번역 전)", () => {
+    const en = localizePart(model(), "en", { summary: "x", specs: [{ label: "A", value: "1" }], faqs: [], altNotes: {}, method: "machine" });
+    expect(en.keySpecs).toEqual(model().keySpecs);
+    expect(en.faqs).toEqual(model().faqs);
   });
 });

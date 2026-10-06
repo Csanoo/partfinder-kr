@@ -21,6 +21,8 @@ export interface NotifyInquiry {
   createdAt: Date;
   /** 부품 요청 품목 (요청 종류만) */
   items?: { mpn: string; manufacturer: string | null; qty: number; note: string | null }[];
+  /** 접수 화면 언어 (ko 외에는 메일에 표시: 회신 언어) */
+  locale?: string;
   /** 첨부 파일명 (요청 종류만) */
   attachments?: { filename: string; size: number }[];
 }
@@ -69,8 +71,10 @@ export function buildNotification(q: NotifyInquiry, adminBaseUrl: string): Omit<
         ]
       : [`품번: ${oneLine(q.mpn)}`, `수량: ${q.qty.toLocaleString("ko-KR")}`];
   const fileLines = q.attachments && q.attachments.length > 0 ? [`첨부: ${q.attachments.map((a) => oneLine(a.filename)).join(", ")}`] : [];
+  const LANG: Record<string, string> = { en: "영어 (English)", ja: "일본어 (日本語)", es: "스페인어 (Español)" };
   const lines = [
     `문의 종류: ${TYPE_LABEL[q.type]}`,
+    ...(q.locale && LANG[q.locale] ? [`회신 언어: ${LANG[q.locale]}`] : []),
     ...itemLines,
     ...fileLines,
     `희망 납기: ${due}`,

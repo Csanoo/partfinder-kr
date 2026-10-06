@@ -3,6 +3,8 @@ import { purgeExpiredPersonalData } from "@/lib/inquiry/retention";
 import { runFactsBatch } from "@/lib/manufacturer/batch";
 import { recordIndexSnapshot } from "@/lib/metrics";
 import { recomputeAllIndexable } from "@/lib/parts/admin";
+import { translationEnabled } from "@/lib/parts/translate-llm";
+import { translateOutdatedParts } from "@/lib/parts/translations";
 
 /**
  * 서버 cron 이 호출하는 정기 작업 (POST /api/cron/{job}, Authorization: Bearer CRON_SECRET).
@@ -19,6 +21,9 @@ export const CRON_JOBS = {
   "purge-personal-data": () => purgeExpiredPersonalData(),
   /** 매일 새벽: 제조사 공식 정보 조회 (초안·검토 중, 지원 제조사) */
   "manufacturer-facts": () => runFactsBatch({ limit: Number(process.env.CRON_FACTS_LIMIT ?? 100) }),
+  /** 매일: 게시 부품 중 번역이 없거나 원문이 바뀐 것 번역 (TRANSLATION_ENABLED 일 때만) */
+  "translate-parts": async () =>
+    translationEnabled() ? translateOutdatedParts(Number(process.env.CRON_TRANSLATE_LIMIT ?? 20)) : { skipped: "TRANSLATION_ENABLED 미설정" },
 } as const;
 
 export type CronJob = keyof typeof CRON_JOBS;

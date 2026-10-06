@@ -2,33 +2,35 @@ import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 import { EOL_LIST_STATUSES, HUB_PAGE_SIZE, hubIndexable, parsePage, type HubItem, type HubModel } from "@/lib/parts/hubs";
 import { partPath } from "@/lib/parts/resolve-route";
-import { site } from "@/lib/site";
+import { siteName } from "@/lib/site";
+import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
+import { fmt, getDictionary } from "@/i18n";
 
 const itemSelect = {
   mpnDisplay: true,
   lifecycleStatus: true,
   eolDate: true,
   manufacturer: { select: { slug: true, nameEn: true } },
-  category: { select: { nameKo: true } },
+  category: { select: { nameKo: true, nameEn: true } },
   slugs: { where: { isCanonical: true }, select: { slug: true }, take: 1 },
 } satisfies Prisma.PartSelect;
 
 type ItemRow = Prisma.PartGetPayload<{ select: typeof itemSelect }>;
 
-function toItem(r: ItemRow): HubItem | null {
+function toItem(r: ItemRow, locale: Locale): HubItem | null {
   const slug = r.slugs[0]?.slug;
   if (!slug) return null;
   return {
     mpn: r.mpnDisplay,
     path: partPath(r.manufacturer.slug, slug),
     manufacturerName: r.manufacturer.nameEn,
-    categoryName: r.category?.nameKo ?? null,
+    categoryName: (locale === "ko" ? r.category?.nameKo : r.category?.nameEn) ?? null,
     lifecycle: r.lifecycleStatus,
     eolDate: r.eolDate,
   };
 }
 
-async function listParts(where: Prisma.PartWhereInput, page: number, orderBy: Prisma.PartOrderByWithRelationInput[]) {
+async function listParts(where: Prisma.PartWhereInput, page: number, orderBy: Prisma.PartOrderByWithRelationInput[], locale: Locale) {
   const rows = await db().part.findMany({
     where: { ...where, pageStatus: "published" },
     orderBy,
@@ -36,13 +38,14 @@ async function listParts(where: Prisma.PartWhereInput, page: number, orderBy: Pr
     take: HUB_PAGE_SIZE,
     select: itemSelect,
   });
-  return rows.map(toItem).filter((x): x is HubItem => x != null);
+  return rows.map((r) => toItem(r, locale)).filter((x): x is HubItem => x != null);
 }
 
 const countPublished = (where: Prisma.PartWhereInput) => db().part.count({ where: { ...where, pageStatus: "published" } });
 
 /** 결과: null → 404 (없는 slug, 게시 부품 0개, 범위 밖 페이지) */
-export async function loadManufacturerHub(slug: string, pageRaw?: string): Promise<HubModel | null> {
+export async function loadManufacturerHub(slug: string, pageRaw?: string, locale: Locale = DEFAULT_LOCALE): Promise<HubModel | null> {
+  const t = getDictionary(locale).hub;
   const m = await db().manufacturer.findUnique({ where: { slug }, select: { id: true, slug: true, nameEn: true, nameKo: true, descriptionKo: true } });
   if (!m) return null;
   const where: Prisma.PartWhereInput = { manufacturerId: m.id };
@@ -51,16 +54,18 @@ export async function loadManufacturerHub(slug: string, pageRaw?: string): Promi
   if (total === 0 || page == null) return null;
 
   const [items, cats] = await Promise.all([
-    listParts(where, page, [{ mpnKey: "asc" }]),
+    listParts(where, page, [{ mpnKey: "asc" }], locale),
     db().part.groupBy({ by: ["categoryId"], where: { ...where, pageStatus: "published", categoryId: { not: null } }, _count: { _all: true } }),
   ]);
-  const catRows = await db().category.findMany({ where: { id: { in: cats.map((c) => c.categoryId!) } }, select: { id: true, slug: true, nameKo: true } });
+  const catRows = await db().category.findMany({ where: { id: { in: cats.map((c) => c.categoryId!) } }, select: { id: true, slug: true, nameKo: true, nameEn: true } });
 
-  const name = m.nameKo && m.nameKo !== m.nameEn ? `${m.nameEn} (${m.nameKo})` : m.nameEn;
+  const name = locale === "ko" && m.nameKo && m.nameKo !== m.nameEn ? `${m.nameEn} (${m.nameKo})` : m.nameEn;
   return {
     kind: "manufacturer",
-    title: `${name} 부품`,
-    intro: m.descriptionKo?.trim() || `${site.name}에 등록된 ${m.nameEn} 부품 ${total}종의 수명주기와 대체품 정보입니다.`,
+    title: fmt(t.mfrTitle, { name }),
+    // 관리자 입력 설명(description_ko)은 한국어 화면에서만
+    intro: (locale === "ko" && m.descriptionKo?.trim()) || fmt(t.mfrIntro, { site: siteName(locale), name: m.nameEn, n: total }),
+    breadcrumbName: name,
     path: `/manufacturers/${m.slug}`,
     items,
     total,
@@ -68,12 +73,13 @@ export async function loadManufacturerHub(slug: string, pageRaw?: string): Promi
     pageCount: Math.ceil(total / HUB_PAGE_SIZE),
     indexable: hubIndexable(total),
     facets: catRows
-      .map((c) => ({ label: c.nameKo, path: `/categories/${c.slug}`, count: cats.find((x) => x.categoryId === c.id)!._count._all }))
+      .map((c) => ({ label: locale === "ko" ? c.nameKo : c.nameEn, path: `/categories/${c.slug}`, count: cats.find((x) => x.categoryId === c.id)!._count._all }))
       .sort((a, b) => b.count - a.count),
   };
 }
 
-export async function loadCategoryHub(slug: string, pageRaw?: string): Promise<HubModel | null> {
+export async function loadCategoryHub(slug: string, pageRaw?: string, locale: Locale = DEFAULT_LOCALE): Promise<HubModel | null> {
+  const t = getDictionary(locale).hub;
   const c = await db().category.findUnique({ where: { slug }, select: { id: true, slug: true, nameEn: true, nameKo: true, descriptionKo: true } });
   if (!c) return null;
   const where: Prisma.PartWhereInput = { categoryId: c.id };
@@ -82,15 +88,18 @@ export async function loadCategoryHub(slug: string, pageRaw?: string): Promise<H
   if (total === 0 || page == null) return null;
 
   const [items, mfrs] = await Promise.all([
-    listParts(where, page, [{ mpnKey: "asc" }]),
+    listParts(where, page, [{ mpnKey: "asc" }], locale),
     db().part.groupBy({ by: ["manufacturerId"], where: { ...where, pageStatus: "published" }, _count: { _all: true } }),
   ]);
   const mfrRows = await db().manufacturer.findMany({ where: { id: { in: mfrs.map((x) => x.manufacturerId) } }, select: { id: true, slug: true, nameEn: true } });
 
   return {
     kind: "category",
-    title: `${c.nameKo} 부품`,
-    intro: c.descriptionKo?.trim() || `${site.name}에 등록된 ${c.nameKo}(${c.nameEn}) 부품 ${total}종의 수명주기와 대체품 정보입니다.`,
+    title: locale === "ko" ? `${c.nameKo} 부품` : fmt(t.catTitle, { name: c.nameEn }),
+    intro:
+      (locale === "ko" && c.descriptionKo?.trim()) ||
+      fmt(t.catIntro, { site: siteName(locale), name: locale === "ko" ? `${c.nameKo}(${c.nameEn})` : c.nameEn, n: total }),
+    breadcrumbName: locale === "ko" ? c.nameKo : c.nameEn,
     path: `/categories/${c.slug}`,
     items,
     total,
@@ -104,16 +113,18 @@ export async function loadCategoryHub(slug: string, pageRaw?: string): Promise<H
 }
 
 /** /eol: 게시된 단종·LTB·NRND 부품. 단종일 가까운 순 → 품번 순 */
-export async function loadEolHub(pageRaw?: string): Promise<HubModel | null> {
+export async function loadEolHub(pageRaw?: string, locale: Locale = DEFAULT_LOCALE): Promise<HubModel | null> {
+  const t = getDictionary(locale).hub;
   const where: Prisma.PartWhereInput = { lifecycleStatus: { in: EOL_LIST_STATUSES } };
   const total = await countPublished(where);
   const page = parsePage(pageRaw, total);
   if (page == null) return null;
-  const items = total === 0 ? [] : await listParts(where, page, [{ eolDate: { sort: "asc", nulls: "last" } }, { mpnKey: "asc" }]);
+  const items = total === 0 ? [] : await listParts(where, page, [{ eolDate: { sort: "asc", nulls: "last" } }, { mpnKey: "asc" }], locale);
   return {
     kind: "eol",
-    title: "단종·수급 주의 부품 목록",
-    intro: `제조사가 단종(EOL)·최종 구매(LTB)·신규 설계 비권장(NRND)으로 발표한 부품 ${total}종입니다. 상태는 각 부품 페이지의 확인일과 출처를 기준으로 합니다.`,
+    title: t.eolTitle,
+    intro: fmt(t.eolIntro, { n: total }),
+    breadcrumbName: t.eolBreadcrumb,
     path: "/eol",
     items,
     total,

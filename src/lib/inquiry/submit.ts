@@ -1,5 +1,7 @@
 import type { InquiryType } from "@/generated/prisma/enums";
 import { ProviderRateLimiter } from "@/lib/providers/rate-limiter";
+import type { Locale } from "@/i18n/config";
+import type { Dict } from "@/i18n";
 import { consentTexts } from "@/lib/inquiry/consent";
 import type { FirstTouch } from "@/lib/attribution";
 import { validateInquiry, validateRequest, type FieldErrors, type InquiryInput, type RequestItemInput } from "@/lib/inquiry/validate";
@@ -36,7 +38,7 @@ export interface StoredAttachment {
 
 export interface InquiryRepo {
   create(
-    data: InquiryInput & InquiryAttribution & { consentTextVersion: string },
+    data: InquiryInput & InquiryAttribution & { consentTextVersion: string; locale?: string },
     extra?: { items: RequestItemInput[]; attachment: StoredAttachment | null },
   ): Promise<{ id: string }>;
 }
@@ -80,9 +82,9 @@ export async function submitInquiry(
 export async function submitRequest(
   form: FormData,
   ip: string,
-  deps: { repo: InquiryRepo; limiter?: ProviderRateLimiter; attribution?: InquiryAttribution },
+  deps: { repo: InquiryRepo; limiter?: ProviderRateLimiter; attribution?: InquiryAttribution; messages?: Dict["errors"]; locale?: Locale },
 ): Promise<SubmitResult> {
-  const result = validateRequest(form);
+  const result = validateRequest(form, deps.messages);
   if (!result.ok && result.spam) return { status: "spam" };
 
   const limiter = deps.limiter ?? defaultLimiter;
@@ -95,7 +97,7 @@ export async function submitRequest(
     ? { filename: attachment.filename, contentType: attachment.contentType, size: attachment.file.size, data: new Uint8Array(await attachment.file.arrayBuffer()) }
     : null;
   const saved = await deps.repo.create(
-    { ...inquiry, ...(deps.attribution ?? attributionFrom(null)), consentTextVersion: consentTexts().version },
+    { ...inquiry, ...(deps.attribution ?? attributionFrom(null)), consentTextVersion: consentTexts().version, locale: deps.locale ?? "ko" },
     { items, attachment: stored },
   );
   return { status: "saved", id: saved.id, partId: inquiry.partId };

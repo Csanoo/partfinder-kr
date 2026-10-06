@@ -1,4 +1,7 @@
 import type { InquiryType, ItemCountBucket, PurchaseType } from "@/generated/prisma/enums";
+import { fmt, getDictionary, type Dict } from "@/i18n";
+
+type ErrorMessages = Dict["errors"];
 
 export const HONEYPOT_FIELD = "website";
 
@@ -164,7 +167,7 @@ export function validateInquiry(type: InquiryType, form: FormData): ValidationRe
  * 부품 요청 검증: 품목 여러 줄(itemMpn/itemQty/itemMfr/itemNote 반복) + 선택 첨부 + 연락처.
  * 품목이 하나도 없으면 첨부 파일이 있어야 한다. 제3자 제공 동의는 선택 (동의하지 않으면 정식 유통 경로로만 찾는다).
  */
-export function validateRequest(form: FormData): RequestValidationResult {
+export function validateRequest(form: FormData, msg: ErrorMessages = getDictionary("ko").errors): RequestValidationResult {
   if (str(form, HONEYPOT_FIELD) !== "") return { ok: false, spam: true };
   const errors: FieldErrors = {};
 
@@ -183,13 +186,13 @@ export function validateRequest(form: FormData): RequestValidationResult {
     if (mpn === "" && qtyRaw === "" && mfr === "" && note === "") continue; // 빈 줄
     const key = `item${i}`;
     const qty = /^\d+$/.test(qtyRaw) ? Number(qtyRaw) : NaN;
-    if (mpn === "") errors[key] = "품번을 입력해 주세요.";
-    else if (mpn.length > MAX.mpn) errors[key] = `품번은 ${MAX.mpn}자 이하로 입력해 주세요.`;
-    else if (!Number.isSafeInteger(qty) || qty < 1) errors[key] = "수량은 1 이상의 정수로 입력해 주세요.";
-    else if (mfr.length > MAX.manufacturer || note.length > MAX.note) errors[key] = "제조사·비고가 너무 깁니다.";
+    if (mpn === "") errors[key] = msg.itemMpn;
+    else if (mpn.length > MAX.mpn) errors[key] = fmt(msg.itemMpnLong, { max: MAX.mpn });
+    else if (!Number.isSafeInteger(qty) || qty < 1) errors[key] = msg.itemQty;
+    else if (mfr.length > MAX.manufacturer || note.length > MAX.note) errors[key] = msg.itemLong;
     else items.push({ position: items.length + 1, mpn, manufacturer: mfr || null, qty, note: note || null });
   }
-  if (items.length > REQUEST_LIMITS.maxItems) errors.items = `품목은 ${REQUEST_LIMITS.maxItems}줄까지 입력할 수 있습니다. 더 많으면 파일로 첨부해 주세요.`;
+  if (items.length > REQUEST_LIMITS.maxItems) errors.items = fmt(msg.itemsTooMany, { max: REQUEST_LIMITS.maxItems });
 
   let attachment: AttachmentInput | null = null;
   const file = form.get("attachment");
@@ -197,18 +200,18 @@ export function validateRequest(form: FormData): RequestValidationResult {
     const filename = file.name.replace(/[\\/\u0000-\u001f\u007f]+/g, "_").slice(-120) || "attachment";
     const ext = filename.includes(".") ? filename.split(".").pop()!.toLowerCase() : "";
     if (!REQUEST_LIMITS.fileExtensions.includes(ext)) {
-      errors.attachment = `첨부할 수 있는 파일: ${REQUEST_LIMITS.fileExtensions.join(", ")}`;
+      errors.attachment = fmt(msg.attachType, { exts: REQUEST_LIMITS.fileExtensions.join(", ") });
     } else if (file.size > REQUEST_LIMITS.maxFileBytes) {
-      errors.attachment = "파일은 5MB 이하만 첨부할 수 있습니다.";
+      errors.attachment = msg.attachSize;
     } else {
       attachment = { file, filename, contentType: CONTENT_TYPES[ext] };
     }
   }
   if (items.length === 0 && !attachment && !errors.attachment && !Object.keys(errors).some((k) => k.startsWith("item"))) {
-    errors.items = "품번을 하나 이상 입력하거나 BOM 파일을 첨부해 주세요.";
+    errors.items = msg.itemsEmpty;
   }
 
-  const contact = validateContact(form, errors);
+  const contact = validateContact(form, errors, msg);
   if (Object.keys(errors).length > 0 || !contact) return { ok: false, spam: false, errors };
 
   const n = items.length;
@@ -233,7 +236,7 @@ export function validateRequest(form: FormData): RequestValidationResult {
 }
 
 /** 연락처·납기·동의 공통 검증. 오류는 errors 에 채우고, 통과하면 값을 돌려준다 */
-function validateContact(form: FormData, errors: FieldErrors) {
+function validateContact(form: FormData, errors: FieldErrors, msg: ErrorMessages) {
   const dueRaw = str(form, "dueDate");
   const dueNegotiable = form.get("dueNegotiable") === "on";
   const purchaseType = str(form, "purchaseType") as PurchaseType;
@@ -248,20 +251,20 @@ function validateContact(form: FormData, errors: FieldErrors) {
 
   let dueDate: Date | null = null;
   if (dueRaw !== "") {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dueRaw) || Number.isNaN(Date.parse(`${dueRaw}T00:00:00Z`))) errors.dueDate = "날짜 형식이 올바르지 않습니다.";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dueRaw) || Number.isNaN(Date.parse(`${dueRaw}T00:00:00Z`))) errors.dueDate = msg.dueDate;
     else dueDate = new Date(`${dueRaw}T00:00:00Z`);
   }
-  if (!PURCHASE_TYPES.includes(purchaseType)) errors.purchaseType = "구매 용도를 선택해 주세요.";
-  if (purchaseType === "company" && company === "") errors.company = "회사명을 입력해 주세요.";
-  if (company.length > MAX.company) errors.company = `회사명은 ${MAX.company}자 이하로 입력해 주세요.`;
-  if (contactName === "") errors.contactName = "담당자명을 입력해 주세요.";
-  else if (contactName.length > MAX.contactName) errors.contactName = "담당자명이 너무 깁니다.";
-  if (phone === "") errors.phone = "연락처를 입력해 주세요.";
-  else if (!/^[0-9+\-() ]{8,}$/.test(phone) || phone.length > MAX.phone) errors.phone = "연락처 형식이 올바르지 않습니다.";
-  if (email === "") errors.email = "이메일을 입력해 주세요.";
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > MAX.email) errors.email = "이메일 형식이 올바르지 않습니다.";
-  if (memo.length > MAX.memo) errors.memo = `메모는 ${MAX.memo}자 이하로 입력해 주세요.`;
-  if (form.get("consentPrivacy") !== "on") errors.consentPrivacy = "개인정보 수집·이용에 동의해 주세요.";
+  if (!PURCHASE_TYPES.includes(purchaseType)) errors.purchaseType = msg.purchaseType;
+  if (purchaseType === "company" && company === "") errors.company = msg.company;
+  if (company.length > MAX.company) errors.company = fmt(msg.companyLong, { max: MAX.company });
+  if (contactName === "") errors.contactName = msg.contactName;
+  else if (contactName.length > MAX.contactName) errors.contactName = msg.contactNameLong;
+  if (phone === "") errors.phone = msg.phone;
+  else if (!/^[0-9+\-() ]{8,}$/.test(phone) || phone.length > MAX.phone) errors.phone = msg.phoneInvalid;
+  if (email === "") errors.email = msg.email;
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > MAX.email) errors.email = msg.emailInvalid;
+  if (memo.length > MAX.memo) errors.memo = fmt(msg.memoLong, { max: MAX.memo });
+  if (form.get("consentPrivacy") !== "on") errors.consentPrivacy = msg.consentPrivacy;
   if (Object.keys(errors).length > before) return null;
 
   return {

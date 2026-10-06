@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
-import type { InquiryFormState } from "@/app/inquiry/actions";
+import type { Dict } from "@/i18n";
+import type { InquiryFormState } from "@/lib/inquiry/actions";
 import { track } from "@/lib/client/track";
 import { HONEYPOT_FIELD, REQUEST_LIMITS } from "@/lib/inquiry/validate";
 
@@ -19,6 +20,9 @@ interface Props {
   action: Action;
   defaults: { mpn?: string; qty?: string; searchLogId?: string; partId?: string };
   consent: { privacy: string; thirdParty: string };
+  /** 화면 문구 (서버에서 언어별 사전의 form 부분만 넘긴다) */
+  t: Dict["form"];
+  locale: string;
   /** 좁은 영역(부품 페이지 사이드바)용: 한 열 배치, 테두리 없음, 품목 한 줄로 시작 */
   compact?: boolean;
 }
@@ -42,7 +46,8 @@ function parsePasted(text: string): Row[] {
 }
 
 /** 부품 요청 폼: 여러 품목 + BOM 첨부 + 연락처 */
-export function RequestForm({ action, defaults, consent, compact = false }: Props) {
+export function RequestForm({ action, defaults, consent, t, locale, compact = false }: Props) {
+  const f = (tpl: string, n: number | string) => tpl.replace(/\{\w+\}/, String(n));
   const [state, formAction, pending] = useActionState(action, {});
   const v = (name: string, fallback = "") => state.values?.[name] ?? fallback;
   const err = (name: string) => state.errors?.[name];
@@ -94,26 +99,27 @@ export function RequestForm({ action, defaults, consent, compact = false }: Prop
 
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label>
-          웹사이트
+          {t.honeypot}
           <input type="text" name={HONEYPOT_FIELD} tabIndex={-1} autoComplete="off" defaultValue="" />
         </label>
       </div>
       <input type="hidden" name="searchLogId" value={defaults.searchLogId ?? ""} />
       <input type="hidden" name="partId" value={defaults.partId ?? ""} />
+      <input type="hidden" name="locale" value={locale} />
 
       <fieldset className="space-y-3">
-        <legend className="mb-2 text-base font-bold">필요한 부품</legend>
+        <legend className="mb-2 text-base font-bold">{t.itemsLegend}</legend>
         <div className="space-y-2">
           {!compact && (
             <div className="hidden grid-cols-[1fr_7rem_1fr_1fr_2rem] gap-2 text-xs font-medium text-muted sm:grid">
               <span>
-                품번(MPN) <Req />
+                {t.colMpn} <Req label={t.required} />
               </span>
               <span>
-                수량 <Req />
+                {t.colQty} <Req label={t.required} />
               </span>
-              <span>제조사 (선택)</span>
-              <span>비고 (선택)</span>
+              <span>{t.colMfr}</span>
+              <span>{t.colNote}</span>
               <span />
             </div>
           )}
@@ -124,8 +130,8 @@ export function RequestForm({ action, defaults, consent, compact = false }: Prop
                   name="itemMpn"
                   value={r.mpn}
                   onChange={(e) => update(r.key, "mpn", e.target.value)}
-                  placeholder={i === 0 ? "예: ULN2003A" : "품번"}
-                  aria-label={`${i + 1}번 품번`}
+                  placeholder={i === 0 ? t.phMpnFirst : t.phMpn}
+                  aria-label={f(t.ariaMpn, i + 1)}
                   maxLength={64}
                   autoComplete="off"
                   spellCheck={false}
@@ -137,8 +143,8 @@ export function RequestForm({ action, defaults, consent, compact = false }: Prop
                   value={r.qty}
                   onChange={(e) => update(r.key, "qty", e.target.value.replace(/[^\d]/g, ""))}
                   inputMode="numeric"
-                  placeholder="수량"
-                  aria-label={`${i + 1}번 수량`}
+                  placeholder={t.phQty}
+                  aria-label={f(t.ariaQty, i + 1)}
                   className={input}
                   aria-invalid={!!err(`item${i}`)}
                 />
@@ -153,8 +159,8 @@ export function RequestForm({ action, defaults, consent, compact = false }: Prop
                       name="itemMfr"
                       value={r.mfr}
                       onChange={(e) => update(r.key, "mfr", e.target.value)}
-                      placeholder="제조사"
-                      aria-label={`${i + 1}번 제조사`}
+                      placeholder={t.phMfr}
+                      aria-label={f(t.ariaMfr, i + 1)}
                       maxLength={64}
                       className={`${input} col-span-2 hidden sm:col-span-1 sm:block`}
                     />
@@ -162,8 +168,8 @@ export function RequestForm({ action, defaults, consent, compact = false }: Prop
                       name="itemNote"
                       value={r.note}
                       onChange={(e) => update(r.key, "note", e.target.value)}
-                      placeholder="대체품 가능 등"
-                      aria-label={`${i + 1}번 비고`}
+                      placeholder={t.phNote}
+                      aria-label={f(t.ariaNote, i + 1)}
                       maxLength={200}
                       className={`${input} hidden sm:block`}
                     />
@@ -172,7 +178,7 @@ export function RequestForm({ action, defaults, consent, compact = false }: Prop
                 <button
                   type="button"
                   onClick={() => remove(r.key)}
-                  aria-label={`${i + 1}번 품목 삭제`}
+                  aria-label={f(t.ariaRemove, i + 1)}
                   className="rounded-md text-lg leading-none text-muted hover:bg-background hover:text-foreground"
                 >
                   ×
@@ -185,7 +191,7 @@ export function RequestForm({ action, defaults, consent, compact = false }: Prop
         <ErrorText text={err("items")} />
         <div className="flex flex-wrap gap-2 text-sm">
           <button type="button" onClick={add} className="rounded-md border border-line px-3 py-1.5 hover:border-brand-500 hover:text-brand-700 dark:hover:text-brand-200">
-            + 품목 추가
+            {t.addRow}
           </button>
           {!compact && (
             <button
@@ -193,14 +199,14 @@ export function RequestForm({ action, defaults, consent, compact = false }: Prop
               onClick={() => setPasteOpen((o) => !o)}
               className="rounded-md border border-line px-3 py-1.5 hover:border-brand-500 hover:text-brand-700 dark:hover:text-brand-200"
             >
-              여러 줄 붙여넣기
+              {t.paste}
             </button>
           )}
         </div>
         {pasteOpen && (
           <div className="space-y-2 rounded-md border border-line bg-background p-3">
             <label htmlFor="paste" className="block text-xs text-muted">
-              한 줄에 &quot;품번 수량&quot; (엑셀에서 두 열을 복사해 붙여넣어도 됩니다)
+              {t.pasteHelp}
             </label>
             <textarea
               id="paste"
@@ -211,14 +217,14 @@ export function RequestForm({ action, defaults, consent, compact = false }: Prop
               className={`${input} mpn`}
             />
             <button type="button" onClick={applyPaste} className="rounded-md bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700">
-              품목으로 넣기
+              {t.pasteApply}
             </button>
           </div>
         )}
 
         <div>
           <label htmlFor="attachment" className="mb-1 block text-sm font-medium">
-            BOM·목록 파일 첨부 <span className="font-normal text-muted">(선택, {REQUEST_LIMITS.fileExtensions.join("·")}, 5MB 이하)</span>
+            {t.attach} <span className="font-normal text-muted">{f(t.attachHint, REQUEST_LIMITS.fileExtensions.join("·"))}</span>
           </label>
           <input
             id="attachment"
@@ -233,12 +239,12 @@ export function RequestForm({ action, defaults, consent, compact = false }: Prop
       </fieldset>
 
       <fieldset className="space-y-4">
-        <legend className="mb-2 text-base font-bold">납기·연락처</legend>
-        <Field label="희망 납기" error={err("dueDate")} htmlFor="dueDate">
+        <legend className="mb-2 text-base font-bold">{t.contactLegend}</legend>
+        <Field label={t.due} req={t.required} error={err("dueDate")} htmlFor="dueDate">
           <div className="flex flex-wrap items-center gap-3">
             <input id="dueDate" name="dueDate" type="date" defaultValue={v("dueDate")} className={`${input} sm:w-48`} aria-invalid={!!err("dueDate")} />
             <label className="inline-flex items-center gap-1 text-sm">
-              <input type="checkbox" name="dueNegotiable" defaultChecked={v("dueNegotiable") === "on"} /> 협의
+              <input type="checkbox" name="dueNegotiable" defaultChecked={v("dueNegotiable") === "on"} /> {t.negotiable}
             </label>
           </div>
         </Field>
@@ -246,12 +252,12 @@ export function RequestForm({ action, defaults, consent, compact = false }: Prop
         <div className={compact ? "space-y-4" : "grid gap-4 sm:grid-cols-[auto_1fr]"}>
           <fieldset aria-invalid={!!err("purchaseType")}>
             <legend className="mb-1 text-sm font-medium">
-              구매 용도 <Req />
+              {t.purchaseType} <Req label={t.required} />
             </legend>
             <div className="flex h-10 items-center gap-4 text-sm">
               {[
-                ["company", "회사"],
-                ["personal", "개인"],
+                ["company", t.purchaseCompany],
+                ["personal", t.purchasePersonal],
               ].map(([value, label]) => (
                 <label key={value} className="inline-flex items-center gap-1">
                   <input type="radio" name="purchaseType" value={value} checked={purchaseType === value} onChange={() => setPurchaseType(value)} /> {label}
@@ -260,57 +266,59 @@ export function RequestForm({ action, defaults, consent, compact = false }: Prop
             </div>
             <ErrorText text={err("purchaseType")} />
           </fieldset>
-          <Field label="회사명" required={purchaseType === "company"} error={err("company")} htmlFor="company">
+          <Field label={t.company} req={t.required} required={purchaseType === "company"} error={err("company")} htmlFor="company">
             <input id="company" name="company" autoComplete="organization" defaultValue={v("company")} maxLength={100} className={input} aria-invalid={!!err("company")} />
           </Field>
         </div>
 
         <div className={compact ? "space-y-4" : "grid gap-4 sm:grid-cols-3"}>
-          <Field label="담당자명" required error={err("contactName")} htmlFor="contactName">
+          <Field label={t.contactName} req={t.required} required error={err("contactName")} htmlFor="contactName">
             <input id="contactName" name="contactName" autoComplete="name" defaultValue={v("contactName")} className={input} aria-invalid={!!err("contactName")} />
           </Field>
-          <Field label="연락처" required error={err("phone")} htmlFor="phone">
-            <input id="phone" name="phone" type="tel" autoComplete="tel" placeholder="010-0000-0000" defaultValue={v("phone")} className={input} aria-invalid={!!err("phone")} />
+          <Field label={t.phone} req={t.required} required error={err("phone")} htmlFor="phone">
+            <input id="phone" name="phone" type="tel" autoComplete="tel" placeholder={t.phPhone} defaultValue={v("phone")} className={input} aria-invalid={!!err("phone")} />
           </Field>
-          <Field label="이메일" required error={err("email")} htmlFor="email">
+          <Field label={t.email} req={t.required} required error={err("email")} htmlFor="email">
             <input id="email" name="email" type="email" autoComplete="email" defaultValue={v("email")} className={input} aria-invalid={!!err("email")} />
           </Field>
         </div>
 
-        <Field label="요청 사항" error={err("memo")} htmlFor="memo">
+        <Field label={t.memo} req={t.required} error={err("memo")} htmlFor="memo">
           <textarea
             id="memo"
             name="memo"
             rows={compact ? 3 : 4}
             maxLength={2000}
             defaultValue={v("memo")}
-            placeholder="예: 대체품 제안 가능, 날짜 코드 조건, 분할 납품 가능 등"
+            placeholder={t.phMemo}
             className={input}
           />
         </Field>
       </fieldset>
 
       <div className="space-y-3">
-        <Consent name="consentPrivacy" text={consent.privacy} label="개인정보 수집·이용에 동의합니다." required checked={v("consentPrivacy") === "on"} error={err("consentPrivacy")} />
+        <Consent name="consentPrivacy" text={consent.privacy} label={t.consentPrivacy} more={t.viewContent} req={t.required} required checked={v("consentPrivacy") === "on"} error={err("consentPrivacy")} />
         <Consent
           name="consentThirdParty"
           text={consent.thirdParty}
-          label="(선택) 개인정보 제3자 제공에 동의합니다."
-          hint="동의하시면 협력 업체를 통해서도 찾아드립니다. 동의하지 않으셔도 정식 유통 경로로 찾아드립니다."
+          label={t.consentThird}
+          hint={t.consentThirdHint}
+          more={t.viewContent}
+          req={t.required}
           checked={v("consentThirdParty") === "on"}
         />
       </div>
 
       <button type="submit" disabled={pending} className="w-full rounded-md bg-brand-600 px-5 py-3 font-semibold text-white hover:bg-brand-700 disabled:opacity-50 sm:w-auto">
-        {pending ? "보내는 중…" : "부품 요청 보내기"}
+        {pending ? t.submitting : t.submit}
       </button>
     </form>
   );
 }
 
-function Req() {
+function Req({ label }: { label: string }) {
   return (
-    <span className="text-red-600" aria-label="필수">
+    <span className="text-red-600" aria-label={label}>
       *
     </span>
   );
@@ -320,11 +328,25 @@ function ErrorText({ text }: { text?: string }) {
   return text ? <p className="mt-1 text-sm text-red-600">{text}</p> : null;
 }
 
-function Field({ label, required, error, htmlFor, children }: { label: string; required?: boolean; error?: string; htmlFor: string; children: React.ReactNode }) {
+function Field({
+  label,
+  req,
+  required,
+  error,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  req: string;
+  required?: boolean;
+  error?: string;
+  htmlFor: string;
+  children: React.ReactNode;
+}) {
   return (
     <div>
       <label htmlFor={htmlFor} className="mb-1 block text-sm font-medium">
-        {label} {required && <Req />}
+        {label} {required && <Req label={req} />}
       </label>
       {children}
       <ErrorText text={error} />
@@ -337,6 +359,8 @@ function Consent({
   text,
   label,
   hint,
+  more,
+  req,
   required = false,
   checked,
   error,
@@ -345,6 +369,8 @@ function Consent({
   text: string;
   label: string;
   hint?: string;
+  more: string;
+  req: string;
   required?: boolean;
   checked: boolean;
   error?: string;
@@ -354,9 +380,9 @@ function Consent({
       <details className="rounded-md border border-line">
         <summary className="flex cursor-pointer list-none flex-wrap items-center gap-2 px-3 py-2 text-sm">
           <label className="inline-flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            <input type="checkbox" name={name} defaultChecked={checked} className="size-4 accent-brand-600" /> {label} {required && <Req />}
+            <input type="checkbox" name={name} defaultChecked={checked} className="size-4 accent-brand-600" /> {label} {required && <Req label={req} />}
           </label>
-          <span className="ml-auto text-xs text-muted underline">내용 보기</span>
+          <span className="ml-auto text-xs text-muted underline">{more}</span>
         </summary>
         <pre className="whitespace-pre-wrap border-t border-line bg-background px-3 py-2 font-sans text-xs text-muted">{text}</pre>
       </details>

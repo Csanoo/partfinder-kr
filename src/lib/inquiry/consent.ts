@@ -1,3 +1,6 @@
+import type { Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n";
+
 /**
  * 동의 문구. 환경변수로 바꿀 수 있고, 문의에는 동의 당시 버전(CONSENT_TEXT_VERSION)을 저장한다.
  * 문구를 바꾸면 반드시 버전도 올린다.
@@ -21,4 +24,12 @@ export function consentTexts() {
     privacy: process.env.CONSENT_PRIVACY_TEXT ?? DEFAULT_PRIVACY,
     thirdParty: process.env.CONSENT_THIRD_PARTY_TEXT ?? DEFAULT_THIRD_PARTY,
   };
+}
+
+/** 화면 언어별 동의 문구. 한국어는 환경변수 덮어쓰기를 따르고, 다른 언어는 사전 문구 (버전은 같이 쓴다) */
+export function consentFor(locale: Locale) {
+  const base = consentTexts();
+  if (locale === "ko") return base;
+  const t = getDictionary(locale).consent;
+  return { version: base.version, privacy: t.privacy, thirdParty: t.thirdParty };
 }

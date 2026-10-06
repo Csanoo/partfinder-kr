@@ -1,6 +1,8 @@
 /** 사이트 브랜드 정보. 화면·메타데이터·구조화 데이터에서 공통으로 쓴다. */
 export const site = {
   name: "MS유통",
+  /** 한국어 외 화면에서 쓰는 이름 (상호 영문 표기 기준) */
+  nameIntl: "MS Electric",
   legalName: "엠에스 유통",
   /** 사업자 정보 (사업자등록증 기준). 푸터에 표시한다. */
   business: {
@@ -19,3 +21,8 @@ export const site = {
     return (process.env.SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
   },
 };
+
+/** 화면 언어별 사이트 이름: 한국어는 MS유통, 그 외는 MS Electric */
+export function siteName(locale: string = "ko"): string {
+  return locale === "ko" ? site.name : site.nameIntl;
+}

@@ -91,13 +91,13 @@ export function validateJsonLd(nodes: unknown[]): string[] {
   return errors;
 }
 
-/** JSON-LD 안의 사람에게 보이는 텍스트 값 (URL·@ 키 제외) — 화면 노출 여부 검사용 */
+/** JSON-LD 안의 사람에게 보이는 텍스트 값 (URL·@ 키·언어 코드 inLanguage 제외) — 화면 노출 여부 검사용 */
 export function visibleTextValues(nodes: unknown[]): string[] {
   const out: string[] = [];
   const walk = (v: unknown, key: string) => {
     if (Array.isArray(v)) v.forEach((x) => walk(x, key));
     else if (isObj(v)) for (const [k, x] of Object.entries(v)) walk(x, k);
-    else if (typeof v === "string" && !key.startsWith("@") && !["url", "item"].includes(key) && !isAbsUrl(v)) out.push(v);
+    else if (typeof v === "string" && !key.startsWith("@") && !["url", "item", "inLanguage"].includes(key) && !isAbsUrl(v)) out.push(v);
   };
   walk(nodes, "");
   return out;

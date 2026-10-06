@@ -125,6 +125,8 @@ sudo systemctl restart partfinder
 | 문의 알림 메일 실제 발송 | Resend 에서 도메인 DNS 인증 → `MAIL_PROVIDER=resend`, `RESEND_API_KEY`, `MAIL_FROM`, `NOTIFY_EMAIL_QUOTE`, `NOTIFY_EMAIL_SOURCING` → 관리자 "설정" 화면에서 테스트 메일 |
 | 구글·네이버 사이트 소유 확인 | `GOOGLE_SITE_VERIFICATION`, `NAVER_SITE_VERIFICATION` → 확인 후 `https://도메인/sitemap.xml` 제출 |
 | 요약 초안(AI) | `SUMMARY_DRAFT_ENABLED=true`, `ANTHROPIC_API_KEY` |
+| 부품 페이지 번역(영·일·스페인어) | `TRANSLATION_ENABLED=true`, `ANTHROPIC_API_KEY` (매일 03:45 정기 작업 + 관리자 부품 화면 '번역 만들기') |
+| 부품 요청 알림 수신 | `NOTIFY_EMAIL_REQUEST` (없으면 `NOTIFY_EMAIL_QUOTE`) |
 | 개인정보 파기 | `PERSONAL_DATA_RETENTION_DAYS` (매일 03:20 KST 자동 실행) |
 
 ## 7. 자주 쓰는 명령
@@ -137,7 +139,13 @@ sudo journalctl -u caddy -n 50              # HTTPS·웹서버 로그
 ls -1t /opt/partfinder/releases             # 릴리스 목록 (최근 5개 보관)
 ```
 
-**정기 작업** (`/etc/cron.d/partfinder`, 한국 시간): 03:10 색인 재계산 · 03:20 개인정보 파기 · 03:30 제조사 정보 조회 · 04:00 DB 백업
+**정기 작업** (`/etc/cron.d/partfinder`, 한국 시간): 03:10 색인 재계산 · 03:20 개인정보 파기 · 03:30 제조사 정보 조회 · 03:45 부품 번역 · 04:00 DB 백업
+
+정기 작업 목록(`deploy/partfinder.cron`)이 바뀌면 배포만으로는 서버에 반영되지 않는다. 서버에서 한 번:
+
+```bash
+cd ~/partfinder-kr && git pull && sudo install -m 644 deploy/partfinder.cron /etc/cron.d/partfinder
+```
 
 ### 이전 릴리스로 되돌리기
 

@@ -116,6 +116,7 @@ export default async function InquiryDetailPage(props: PageProps<"/admin/inquiri
         <Card title="문의 내용">
           <dl>
             <Row label="접수">{fmt(q.createdAt)}</Row>
+            {q.locale !== "ko" && <Row label="회신 언어">{q.locale.toUpperCase()}</Row>}
             <Row label="희망 납기">{q.dueDate ? q.dueDate.toISOString().slice(0, 10) : q.dueNegotiable ? "협의" : "-"}</Row>
             <Row label="이번 구매 품목 수">{ITEM_BUCKET_LABEL[q.itemCountBucket]}</Row>
             <Row label="구매 용도">{PURCHASE_LABEL[q.purchaseType]}</Row>

@@ -1,5 +1,7 @@
 import { DistributorResults } from "@/components/distributor-results";
 import { BrokerListings, RequestCta } from "@/components/request-cta";
+import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
+import { fmt, getDictionary } from "@/i18n";
 import type { ProviderResult } from "@/lib/providers/types";
 import { evaluateSourcingSignals } from "@/lib/search/sourcing";
 
@@ -12,31 +14,32 @@ export function SearchResultSections({
   mpn,
   qty,
   searchLogId = null,
+  locale = DEFAULT_LOCALE,
 }: {
   results: ProviderResult[];
   mpn: string;
   qty: number | null;
   searchLogId?: string | null;
+  locale?: Locale;
 }) {
+  const t = getDictionary(locale).cta;
   const signals = evaluateSourcingSignals(results, qty);
   const authorized = results.filter((r) => r.kind === "authorized");
   const withStock = authorized.filter((r) => r.status === "ok" && r.offers.some((o) => (o.stock ?? 0) > 0)).length;
   return (
     <div className="space-y-4">
-      <RequestCta mpn={mpn} qty={qty} signals={signals} searchLogId={searchLogId} />
+      <RequestCta mpn={mpn} qty={qty} signals={signals} searchLogId={searchLogId} locale={locale} />
       <details className="group">
         <summary className="flex cursor-pointer list-none items-center gap-2 py-2 text-sm font-semibold">
           <span className="text-muted transition-transform group-open:rotate-90" aria-hidden="true">
             ▸
           </span>
-          참고: 정식 유통사 재고 현황
-          <span className="font-normal text-muted">
-            (유통사 {authorized.length}곳 · 재고 있음 {withStock}곳)
-          </span>
+          {t.stockRef}
+          <span className="font-normal text-muted">{fmt(t.stockRefCount, { total: authorized.length, n: withStock })}</span>
         </summary>
         <div className="mt-2 space-y-4">
-          <DistributorResults results={results} qty={qty} />
-          <BrokerListings results={results.filter((r) => r.kind === "broker")} />
+          <DistributorResults results={results} qty={qty} locale={locale} />
+          <BrokerListings results={results.filter((r) => r.kind === "broker")} locale={locale} />
         </div>
       </details>
     </div>

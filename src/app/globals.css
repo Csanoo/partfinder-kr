@@ -34,7 +34,7 @@
   --color-pcb-600: #1b6b41;
   --color-pcb-700: #165636;
 
-  --font-sans: var(--font-plex-kr), system-ui, -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  --font-sans: var(--font-plex-kr), system-ui, -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Consolas, monospace;
 }
 

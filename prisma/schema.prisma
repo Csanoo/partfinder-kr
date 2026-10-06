@@ -100,6 +100,8 @@ model Inquiry {
   trafficSource        String?         @map("traffic_source")
   /// 부품 페이지에서 접수된 경우
   partId               String?         @map("part_id") @db.Uuid
+  /// 접수한 화면의 언어 (ko·en·ja·es) — 회신 언어 판단용
+  locale               String          @default("ko")
   createdAt            DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt            DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
 
@@ -223,6 +225,7 @@ model Part {
   @@index([categoryId])
   @@index([lifecycleStatus])
   @@map("part")
+  translations PartTranslation[]
 }
 
 /// slug ↔ 부품 매핑. 현재 정규 slug(isCanonical) + 과거 slug(301용)
@@ -390,4 +393,29 @@ model InquiryAttachment {
 
   @@index([inquiryId])
   @@map("inquiry_attachment")
+}
+
+/// 부품 페이지 번역 (en·ja·es). 한국어 원문(요약·스펙·FAQ·대체품 비고)을 번역해 저장한다.
+/// source_hash 는 번역 당시 원문의 해시: 원문이 바뀌면 '갱신 필요' 로 표시하고 정기 작업이 다시 번역한다.
+model PartTranslation {
+  id         String   @id @default(uuid()) @db.Uuid
+  partId     String   @map("part_id") @db.Uuid
+  locale     String
+  summary    String?
+  /// [{label, value}] keySpecs 와 같은 순서
+  specs      Json     @default("[]")
+  /// [{q, a}] 게시된 FAQ 와 같은 순서
+  faqs       Json     @default("[]")
+  /// {대체품 id: 비고}
+  altNotes   Json     @default("{}") @map("alt_notes")
+  sourceHash String   @map("source_hash")
+  /// machine(자동 번역) | manual(관리자가 고침)
+  method     String   @default("machine")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  part Part @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@unique([partId, locale])
+  @@map("part_translation")
 }

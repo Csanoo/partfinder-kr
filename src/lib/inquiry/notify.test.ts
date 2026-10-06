@@ -41,6 +41,11 @@ describe("buildNotification", () => {
     expect(text).toContain("첨부: bom.xlsx");
   });
 
+  it("한국어가 아닌 화면에서 온 요청은 회신 언어를 표시한다", () => {
+    expect(buildNotification({ ...q, locale: "en" }, "https://ms.example").text).toContain("회신 언어: 영어 (English)");
+    expect(buildNotification({ ...q, locale: "ko" }, "https://ms.example").text).not.toContain("회신 언어");
+  });
+
   it("부품 요청 수신 주소: NOTIFY_EMAIL_REQUEST, 없으면 견적 문의 주소", () => {
     vi.stubEnv("NOTIFY_EMAIL_QUOTE", "quote@ms.example");
     expect(recipientsFor("request")).toEqual(["quote@ms.example"]);

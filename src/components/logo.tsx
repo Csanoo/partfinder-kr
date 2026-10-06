@@ -1,4 +1,4 @@
-import { site } from "@/lib/site";
+import { site, siteName } from "@/lib/site";
 
 /** 심볼: 남색 사각형 + MS. 파비콘(src/app/icon.svg)과 같은 디자인. */
 export function LogoMark({ size = 28 }: { size?: number }) {
@@ -22,11 +22,11 @@ export function LogoMark({ size = 28 }: { size?: number }) {
 }
 
 /** 헤더용 로고: 심볼 + 워드마크. */
-export function Logo() {
+export function Logo({ locale = "ko" }: { locale?: string }) {
   return (
     <span className="inline-flex items-center gap-2">
       <LogoMark />
-      <span className="text-[17px] font-bold tracking-tight">{site.name}</span>
+      <span className="text-[17px] font-bold tracking-tight">{siteName(locale)}</span>
       <span className="sr-only">({site.legalName})</span>
     </span>
   );
