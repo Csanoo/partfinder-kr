@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans_KR, JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono } from "next/font/google";
+// 본문 글꼴: Pretendard (한국어·영문), Pretendard JP (일본어). 패키지에서 자체 호스팅, 화면에 쓰인 글자 묶음만 내려받는다
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
+import "pretendard-jp/dist/web/variable/pretendardvariable-jp-dynamic-subset.css";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import "../globals.css";
 
 // 관리자 화면은 공개 페이지(app/[lang])와 별도의 루트 레이아웃을 쓴다 (한국어 전용)
-const plexKr = IBM_Plex_Sans_KR({ weight: ["400", "500", "600", "700"], subsets: ["latin"], variable: "--font-plex-kr", display: "swap", preload: false });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap" });
 
 export const dynamic = "force-dynamic";
@@ -26,7 +28,7 @@ const nav = [
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
-    <html lang="ko" className={`${plexKr.variable} ${jetbrains.variable} h-full antialiased`}>
+    <html lang="ko" className={`${jetbrains.variable} h-full antialiased`}>
       <body className="min-h-full">
         <header className="border-b border-line bg-surface">
           <div className="mx-auto flex h-14 max-w-6xl items-center px-4">
