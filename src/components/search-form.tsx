@@ -4,17 +4,20 @@ export function SearchForm({
   defaultQuery = "",
   defaultQty = "",
   size = "md",
+  stacked = false,
 }: {
   defaultQuery?: string;
   defaultQty?: string;
   size?: "md" | "lg";
+  /** 좁은 칸용: 항상 세로 배치 */
+  stacked?: boolean;
 }) {
   const h = size === "lg" ? "h-12 text-base" : "h-10 text-sm";
   return (
     <Form
       action="/search"
       role="search"
-      className="flex flex-col gap-2 sm:flex-row sm:items-center"
+      className={stacked ? "flex flex-col gap-2" : "flex flex-col gap-2 sm:flex-row sm:items-center"}
     >
       <label className="flex-1">
         <span className="sr-only">품번</span>
@@ -29,7 +32,7 @@ export function SearchForm({
         />
       </label>
       <div className="flex gap-2">
-        <label className="sm:w-32">
+        <label className={stacked ? "flex-1" : "sm:w-32"}>
           <span className="sr-only">수량 (선택)</span>
           <input
             name="qty"

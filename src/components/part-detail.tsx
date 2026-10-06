@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { PackageFigure } from "@/components/package-illustration";
-import { SOURCING_DISCLAIMER } from "@/components/sourcing-inquiry-box";
+import { SOURCING_DISCLAIMER } from "@/components/request-cta";
 import { parsePackage } from "@/lib/package/parse-package";
 import { LIFECYCLE_TEXT, manufacturerLabel, RELATION_TEXT, ymd, type PartPageModel } from "@/lib/parts/page-model";
 
@@ -150,7 +150,7 @@ export function PartDetail({
           {/* 5. 대체품 */}
           <Section id="alt-heading" title={`대체품 (${part.alternatives.length})`}>
             {part.alternatives.length === 0 ? (
-              <p className="text-sm text-muted">확인된 대체품이 없습니다. 소싱 문의로 대체품 검토를 요청할 수 있습니다.</p>
+              <p className="text-sm text-muted">확인된 대체품이 없습니다. 부품 요청에 ‘대체품 가능’이라고 남기시면 대체품을 찾아 제안드립니다.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[480px] text-sm">
@@ -228,12 +228,15 @@ export function PartDetail({
           )}
         </div>
 
-        {/* 7. 소싱 문의 (시각적으로 분리) */}
-        <aside aria-labelledby="sourcing-heading" className="h-fit space-y-3 rounded-md border border-line bg-surface p-5 lg:sticky lg:top-20">
+        {/* 7. 부품 요청 (시각적으로 분리) */}
+        <aside aria-labelledby="sourcing-heading" className="h-fit space-y-3 rounded-md border border-brand-600 bg-surface p-5 lg:sticky lg:top-20 dark:border-brand-400">
           <h2 id="sourcing-heading" className="text-lg font-bold">
-            소싱 문의
+            이 부품 요청하기
           </h2>
-          <p className="rounded-md border border-copper-200 bg-copper-50/50 p-2 text-xs text-copper-700 dark:border-copper-700 dark:bg-copper-700/10 dark:text-copper-200">{SOURCING_DISCLAIMER}</p>
+          <p className="text-sm text-muted">
+            수량을 알려주시면 정식 유통 재고부터 단종·품귀 공급처까지 찾아 가격·납기를 회신드립니다.
+          </p>
+          <p className="text-xs text-muted">{SOURCING_DISCLAIMER}</p>
           {sourcingForm}
         </aside>
       </div>

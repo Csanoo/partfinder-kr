@@ -21,6 +21,33 @@ const q: NotifyInquiry = {
 };
 
 describe("buildNotification", () => {
+  it("부품 요청: 제목에 '외 N건', 본문에 품목 목록과 첨부 파일명", () => {
+    const req: NotifyInquiry = {
+      ...q,
+      type: "request",
+      mpn: "ULN2003A",
+      qty: 500,
+      items: [
+        { mpn: "ULN2003A", manufacturer: "TI", qty: 500, note: "대체품 가능" },
+        { mpn: "LM358N", manufacturer: null, qty: 1000, note: null },
+      ],
+      attachments: [{ filename: "bom.xlsx", size: 1000 }],
+    };
+    const { subject, text } = buildNotification(req, "https://ms.example");
+    expect(subject).toBe("[부품 요청] ULN2003A x 500 외 1건");
+    expect(text).toContain("품목 (2건):");
+    expect(text).toContain("1. ULN2003A x 500 (TI) - 대체품 가능");
+    expect(text).toContain("2. LM358N x 1,000");
+    expect(text).toContain("첨부: bom.xlsx");
+  });
+
+  it("부품 요청 수신 주소: NOTIFY_EMAIL_REQUEST, 없으면 견적 문의 주소", () => {
+    vi.stubEnv("NOTIFY_EMAIL_QUOTE", "quote@ms.example");
+    expect(recipientsFor("request")).toEqual(["quote@ms.example"]);
+    vi.stubEnv("NOTIFY_EMAIL_REQUEST", "req@ms.example");
+    expect(recipientsFor("request")).toEqual(["req@ms.example"]);
+  });
+
   it("제목 접두어 고정: [소싱 문의] / [견적 문의]", () => {
     expect(buildNotification(q, "https://ms.example").subject).toBe("[소싱 문의] LM358-N/NOPB x 1500");
     expect(buildNotification({ ...q, type: "quote" }, "https://ms.example").subject).toBe("[견적 문의] LM358-N/NOPB x 1500");

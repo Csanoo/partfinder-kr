@@ -181,7 +181,7 @@ describe("부품 상세 화면 (5.1)", () => {
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
 
-  it("소싱 문의는 별도 영역에 고지 문구와 함께 있다", () => {
+  it("부품 요청은 별도 영역에 고지 문구와 함께 있다", () => {
     const html = render(model());
     expect(html).toContain('aria-labelledby="sourcing-heading"');
     expect(html).toContain("소싱 부품은 정식 유통 경로가 아니며");

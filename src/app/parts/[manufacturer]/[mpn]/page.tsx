@@ -3,11 +3,11 @@ import { headers } from "next/headers";
 import { isBot } from "@/lib/search/search-log";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { submitSourcingInquiry } from "@/app/inquiry/actions";
+import { submitPartRequest } from "@/app/inquiry/actions";
 import { AvailabilityPanel } from "@/components/availability-panel";
-import { InquiryForm } from "@/components/inquiry-form";
 import { JsonLd } from "@/components/json-ld";
 import { PartDetail } from "@/components/part-detail";
+import { RequestForm } from "@/components/request-form";
 import { TrackOnMount } from "@/components/track-view";
 import { consentTexts } from "@/lib/inquiry/consent";
 import { loadPublishedPart } from "@/lib/parts/load-page";
@@ -51,10 +51,9 @@ export default async function PartPage(props: PageProps<"/parts/[manufacturer]/[
         part={part}
         availability={<AvailabilityPanel mpn={part.mpnDisplay} isBot={bot} partId={part.id} />}
         sourcingForm={
-          <InquiryForm
-            type="sourcing"
-            action={submitSourcingInquiry}
-            defaults={{ mpn: part.mpnDisplay, qty: "", searchLogId: "", partId: part.id }}
+          <RequestForm
+            action={submitPartRequest}
+            defaults={{ mpn: part.mpnDisplay, partId: part.id }}
             consent={consentTexts()}
             compact
           />

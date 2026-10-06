@@ -71,7 +71,7 @@ async function staticUrls(): Promise<SitemapUrl[]> {
     _count: { _all: true },
     _max: { contentUpdatedAt: true },
   });
-  const urls: SitemapUrl[] = [{ loc: absoluteUrl("/") }];
+  const urls: SitemapUrl[] = [{ loc: absoluteUrl("/") }, { loc: absoluteUrl("/request") }];
   // /eol 은 목록이 있을 때만 (빈 목록은 noindex)
   if (eol._count._all > 0) urls.push({ loc: absoluteUrl("/eol"), lastmod: eol._max.contentUpdatedAt });
   return urls;

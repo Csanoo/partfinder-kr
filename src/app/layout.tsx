@@ -71,17 +71,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Logo />
             </Link>
             <nav aria-label="주 메뉴" className="flex items-center gap-1 text-sm">
-              <Link href="/" className="hidden sm:inline-block rounded-md px-3 py-1.5 text-muted hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-900/40 dark:hover:text-brand-200">
-                부품 검색
+              <Link href="/search" className="hidden sm:inline-block rounded-md px-3 py-1.5 text-muted hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-900/40 dark:hover:text-brand-200">
+                재고 조회
               </Link>
               <Link href="/eol" className="rounded-md px-3 py-1.5 text-muted hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-900/40 dark:hover:text-brand-200">
                 단종 부품
               </Link>
               <Link
-                href="/inquiry/sourcing"
+                href="/request"
                 className="rounded-md bg-brand-600 px-3 py-1.5 font-medium text-white hover:bg-brand-700"
               >
-                소싱 문의
+                부품 요청
               </Link>
             </nav>
           </div>

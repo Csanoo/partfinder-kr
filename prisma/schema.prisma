@@ -13,6 +13,8 @@ datasource db {
 enum InquiryType {
   quote
   sourcing
+  /// 부품 요청 (견적·소싱 통합, 여러 품목 + 첨부). 2026-10 이후 신규 접수는 모두 이 종류
+  request
 }
 
 /// 이번 구매 품목 수 (BOM 수요 검증용)
@@ -103,6 +105,10 @@ model Inquiry {
 
   searchLog SearchLog? @relation(fields: [searchLogId], references: [id], onDelete: SetNull)
   part      Part?      @relation(fields: [partId], references: [id], onDelete: SetNull)
+
+  /// 부품 요청의 품목들 (mpn·qty 는 첫 품목을 대표값으로 함께 저장)
+  items       InquiryItem[]
+  attachments InquiryAttachment[]
 
   @@index([createdAt])
   @@index([type, status])
@@ -352,4 +358,36 @@ model IndexSnapshot {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@map("index_snapshot")
+}
+
+/// 부품 요청 품목
+model InquiryItem {
+  id           String  @id @default(uuid()) @db.Uuid
+  inquiryId    String  @map("inquiry_id") @db.Uuid
+  position     Int
+  mpn          String
+  manufacturer String?
+  qty          Int
+  note         String?
+
+  inquiry Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+
+  @@index([inquiryId])
+  @@map("inquiry_item")
+}
+
+/// 부품 요청 첨부 (BOM 등). 개인정보가 섞일 수 있어 보유기간 경과 시 함께 삭제한다
+model InquiryAttachment {
+  id          String   @id @default(uuid()) @db.Uuid
+  inquiryId   String   @map("inquiry_id") @db.Uuid
+  filename    String
+  contentType String   @map("content_type")
+  size        Int
+  data        Bytes
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  inquiry Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+
+  @@index([inquiryId])
+  @@map("inquiry_attachment")
 }

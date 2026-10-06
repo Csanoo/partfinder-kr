@@ -7,7 +7,7 @@ import type { InquiryType } from "@/generated/prisma/enums";
 import { ATTRIBUTION_COOKIE, decodeFirstTouch } from "@/lib/attribution";
 import { recordEvent } from "@/lib/events-server";
 import { sendInquiryNotification } from "@/lib/inquiry/notify-server";
-import { attributionFrom, submitInquiry } from "@/lib/inquiry/submit";
+import { attributionFrom, submitInquiry, submitRequest } from "@/lib/inquiry/submit";
 import type { FieldErrors } from "@/lib/inquiry/validate";
 import { prismaInquiryRepo } from "@/lib/repos";
 
@@ -16,7 +16,11 @@ export interface InquiryFormState {
   message?: string;
   /** 오류 시 입력값 유지용 */
   values?: Record<string, string>;
+  /** 부품 요청: 품목 줄 입력값 유지용 */
+  items?: { mpn: string; qty: string; mfr: string; note: string }[];
 }
+
+const str = (v: FormDataEntryValue | undefined) => (typeof v === "string" ? v : "");
 
 async function handle(type: InquiryType, formData: FormData): Promise<InquiryFormState> {
   const h = await headers();
@@ -25,7 +29,8 @@ async function handle(type: InquiryType, formData: FormData): Promise<InquiryFor
 
   const jar = await cookies();
   const attribution = attributionFrom(decodeFirstTouch(jar.get(ATTRIBUTION_COOKIE)?.value));
-  const res = await submitInquiry(type, formData, ip, { repo: prismaInquiryRepo, attribution });
+  const deps = { repo: prismaInquiryRepo, attribution };
+  const res = type === "request" ? await submitRequest(formData, ip, deps) : await submitInquiry(type, formData, ip, deps);
   if (res.status === "saved") {
     // 알림은 응답 뒤에 보낸다. 실패해도 문의는 이미 저장되어 있다 (notify_status 로 표시)
     const inquiryId = res.id;
@@ -35,18 +40,23 @@ async function handle(type: InquiryType, formData: FormData): Promise<InquiryFor
   if (res.status === "saved" || res.status === "spam") redirect(`/inquiry/thanks?type=${type}`);
 
   const values: Record<string, string> = {};
-  for (const [k, v] of formData.entries()) if (typeof v === "string" && !k.startsWith("$")) values[k] = v;
+  for (const [k, v] of formData.entries()) if (typeof v === "string" && !k.startsWith("$") && !k.startsWith("item")) values[k] = v;
+
+  // 품목 줄은 순서대로 배열로 돌려준다 (오류 후 다시 그리기용)
+  const items = formData.getAll("itemMpn").map((_, i) => ({
+    mpn: str(formData.getAll("itemMpn")[i]),
+    qty: str(formData.getAll("itemQty")[i]),
+    mfr: str(formData.getAll("itemMfr")[i]),
+    note: str(formData.getAll("itemNote")[i]),
+  }));
 
   if (res.status === "rate_limited") {
-    return { message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.", values };
+    return { message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.", values, items };
   }
-  return { errors: res.errors, message: "입력 내용을 확인해 주세요.", values };
+  const fileNote = formData.get("attachment") instanceof File && (formData.get("attachment") as File).size > 0 ? " 첨부 파일은 다시 선택해 주세요." : "";
+  return { errors: res.errors, message: `입력 내용을 확인해 주세요.${fileNote}`, values, items };
 }
 
-export async function submitQuoteInquiry(_prev: InquiryFormState, formData: FormData) {
-  return handle("quote", formData);
-}
-
-export async function submitSourcingInquiry(_prev: InquiryFormState, formData: FormData) {
-  return handle("sourcing", formData);
+export async function submitPartRequest(_prev: InquiryFormState, formData: FormData) {
+  return handle("request", formData);
 }
