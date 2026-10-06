@@ -12,6 +12,7 @@ function hub(over: Partial<HubModel> = {}): HubModel {
     kind: "manufacturer",
     title: "Texas Instruments 부품",
     intro: "MS유통에 등록된 Texas Instruments 부품 2종의 수명주기와 대체품 정보입니다.",
+    breadcrumbName: "Texas Instruments",
     path: "/manufacturers/texas-instruments",
     items: [
       { mpn: "LM358-N/NOPB", path: "/parts/texas-instruments/lm358-n_nopb", manufacturerName: "Texas Instruments", categoryName: "증폭기", lifecycle: "eol", eolDate: null },

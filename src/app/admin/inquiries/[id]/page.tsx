@@ -29,6 +29,8 @@ export default async function InquiryDetailPage(props: PageProps<"/admin/inquiri
     include: {
       part: { select: { id: true, mpnDisplay: true, manufacturer: { select: { slug: true } }, slugs: { where: { isCanonical: true }, select: { slug: true }, take: 1 } } },
       searchLog: { select: { queryRaw: true, createdAt: true } },
+      items: { orderBy: { position: "asc" } },
+      attachments: { select: { id: true, filename: true, size: true, createdAt: true } },
     },
   });
   if (!q) notFound();
@@ -43,7 +45,9 @@ export default async function InquiryDetailPage(props: PageProps<"/admin/inquiri
         / {INQUIRY_TYPE_LABEL[q.type]} 문의
       </p>
       <h1 className="text-2xl font-bold">
-        <span className="mpn">{q.mpn}</span> × {q.qty.toLocaleString("ko-KR")}
+        <span className="mpn">{q.mpn}</span>
+        {q.qty > 0 && ` × ${q.qty.toLocaleString("ko-KR")}`}
+        {q.items.length > 1 && <span className="ml-2 text-base font-normal text-muted">외 {q.items.length - 1}건</span>}
       </h1>
       <Notice error={first(sp.error)} />
 
@@ -64,10 +68,55 @@ export default async function InquiryDetailPage(props: PageProps<"/admin/inquiri
         </form>
       )}
 
+      {(q.items.length > 0 || q.attachments.length > 0) && (
+        <Card title={`요청 품목 (${q.items.length}건)`}>
+          {q.items.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-line text-left text-xs text-muted">
+                    <th className="w-10 py-1.5 pr-2 font-medium">#</th>
+                    <th className="py-1.5 pr-2 font-medium">품번</th>
+                    <th className="py-1.5 pr-2 text-right font-medium">수량</th>
+                    <th className="py-1.5 pr-2 font-medium">제조사</th>
+                    <th className="py-1.5 font-medium">비고</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {q.items.map((it) => (
+                    <tr key={it.id} className="border-b border-line last:border-0">
+                      <td className="py-1.5 pr-2 text-muted">{it.position}</td>
+                      <td className="mpn py-1.5 pr-2 font-medium">{it.mpn}</td>
+                      <td className="py-1.5 pr-2 text-right tabular-nums">{it.qty.toLocaleString("ko-KR")}</td>
+                      <td className="py-1.5 pr-2">{it.manufacturer ?? "-"}</td>
+                      <td className="py-1.5">{it.note ?? "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {q.attachments.length > 0 && (
+            <ul className="mt-3 space-y-1 text-sm">
+              {q.attachments.map((a) => (
+                <li key={a.id}>
+                  첨부:{" "}
+                  <a href={`/admin/inquiries/${q.id}/attachments/${a.id}`} className="text-brand-600 underline dark:text-brand-300">
+                    {a.filename}
+                  </a>{" "}
+                  <span className="text-xs text-muted">({Math.ceil(a.size / 1024).toLocaleString("ko-KR")} KB)</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2">
         <Card title="문의 내용">
           <dl>
             <Row label="접수">{fmt(q.createdAt)}</Row>
+            {q.locale !== "ko" && <Row label="회신 언어">{q.locale.toUpperCase()}</Row>}
             <Row label="희망 납기">{q.dueDate ? q.dueDate.toISOString().slice(0, 10) : q.dueNegotiable ? "협의" : "-"}</Row>
             <Row label="이번 구매 품목 수">{ITEM_BUCKET_LABEL[q.itemCountBucket]}</Row>
             <Row label="구매 용도">{PURCHASE_LABEL[q.purchaseType]}</Row>

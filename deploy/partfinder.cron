@@ -8,5 +8,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 20 18 * * * partfinder /opt/partfinder/bin/cron-call purge-personal-data
 # 03:30 KST 제조사 공식 정보 조회 (초안·검토 중 부품, 결과는 관리자 검토 대기)
 30 18 * * * partfinder /opt/partfinder/bin/cron-call manufacturer-facts
+# 03:45 KST 부품 페이지 번역 (영·일·스페인어, TRANSLATION_ENABLED=true 일 때만)
+45 18 * * * partfinder /opt/partfinder/bin/cron-call translate-parts
 # 04:00 KST DB 백업
 0 19 * * * postgres /opt/partfinder/bin/backup-db

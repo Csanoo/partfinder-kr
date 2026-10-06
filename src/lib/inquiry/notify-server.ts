@@ -19,6 +19,9 @@ export async function sendInquiryNotification(inquiryId: string): Promise<"sent"
       company: true,
       contactName: true,
       createdAt: true,
+      locale: true,
+      items: { select: { mpn: true, manufacturer: true, qty: true, note: true }, orderBy: { position: "asc" } },
+      attachments: { select: { filename: true, size: true } },
     },
   });
   if (!q) return "failed";

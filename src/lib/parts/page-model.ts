@@ -3,6 +3,9 @@
  * DB와 화면에서 분리한 순수 함수라 테스트로 검증한다.
  */
 
+import { DEFAULT_LOCALE, LOCALE_TAG, localePath, type Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n";
+
 export type Lifecycle = "active" | "nrnd" | "ltb" | "eol" | "unknown";
 
 export interface PartPageModel {
@@ -21,6 +24,7 @@ export interface PartPageModel {
   };
   datasheetUrl: string | null;
   alternatives: {
+    id: string;
     mpn: string;
     manufacturerName: string | null;
     /** 게시된 내부 페이지가 있으면 경로 */
@@ -34,29 +38,60 @@ export interface PartPageModel {
   /** 정규 경로 (/parts/{mfr}/{slug}) */
   path: string;
   indexable: boolean;
+  /** 화면 언어의 번역 상태: ko 는 원문, machine/manual 은 번역 적용, missing 은 번역 없음(한국어 원문 표시) */
+  translation: "original" | "machine" | "manual" | "missing";
 }
 
-export const LIFECYCLE_TEXT: Record<Lifecycle, string> = {
-  active: "양산 중 (Active)",
-  nrnd: "신규 설계 비권장 (NRND)",
-  ltb: "최종 구매 접수 중 (LTB)",
-  eol: "단종 (EOL)",
-  unknown: "확인 중",
-};
+/** 저장된 번역 (part_translation 한 행) */
+export interface StoredTranslation {
+  summary: string | null;
+  specs: unknown;
+  faqs: unknown;
+  altNotes: unknown;
+  method: string;
+}
 
-export const RELATION_TEXT: Record<PartPageModel["alternatives"][number]["relation"], string> = {
-  drop_in: "핀 호환",
-  similar: "유사 사양",
-  upgrade: "상위 호환",
-};
+/**
+ * 한국어 모델에 번역을 입힌다 (순수 함수).
+ * - 번역이 없으면 한국어 원문 그대로 + translation: "missing" (페이지는 noindex, hreflang 에서 제외)
+ * - 개수가 어긋난 항목(원문이 바뀐 뒤 아직 재번역 전)은 원문을 쓴다
+ * - 카테고리·제조사 이름은 영문명
+ */
+export function localizePart(p: PartPageModel, locale: Locale, t: StoredTranslation | null): PartPageModel {
+  if (locale === DEFAULT_LOCALE) return { ...p, translation: "original" };
+  const category = p.category ? { ...p.category, nameKo: p.category.nameEn } : null;
+  const manufacturer = { ...p.manufacturer, nameKo: p.manufacturer.nameEn };
+  if (!t) return { ...p, category, manufacturer, translation: "missing" };
+  const specs = Array.isArray(t.specs) && t.specs.length === p.keySpecs.length ? (t.specs as { label: string; value: string }[]) : p.keySpecs;
+  const faqs =
+    Array.isArray(t.faqs) && t.faqs.length === p.faqs.length
+      ? (t.faqs as { q: string; a: string }[]).map((f) => ({ questionKo: f.q, answerKo: f.a }))
+      : p.faqs;
+  const notes = (t.altNotes && typeof t.altNotes === "object" ? t.altNotes : {}) as Record<string, string>;
+  return {
+    ...p,
+    category,
+    manufacturer,
+    summaryKo: t.summary ?? p.summaryKo,
+    keySpecs: specs,
+    faqs,
+    alternatives: p.alternatives.map((a) => ({ ...a, noteKo: a.noteKo ? (notes[a.id] ?? a.noteKo) : null })),
+    translation: t.method === "manual" ? "manual" : "machine",
+  };
+}
+
+export const LIFECYCLE_TEXT: Record<Lifecycle, string> = getDictionary("ko").part.lifecycleText;
+
+export const RELATION_TEXT: Record<PartPageModel["alternatives"][number]["relation"], string> = getDictionary("ko").part.relationText;
 
 export function manufacturerLabel(m: PartPageModel["manufacturer"]): string {
   return m.nameKo && m.nameKo !== m.nameEn ? `${m.nameEn} (${m.nameKo})` : m.nameEn;
 }
 
-/** 5.2 title: `{mpn} 단종·대체품·재고 문의 | {제조사명}`, active면 `재고·구매 문의` */
-export function buildTitle(p: Pick<PartPageModel, "mpnDisplay" | "manufacturer" | "lifecycle">): string {
-  const phrase = p.lifecycle.status === "active" ? "재고·구매 문의" : "단종·대체품·재고 문의";
+/** 5.2 title: `{mpn} 단종·대체품·재고 문의 | {제조사명}`, active면 `재고·구매 문의` (언어별 문구) */
+export function buildTitle(p: Pick<PartPageModel, "mpnDisplay" | "manufacturer" | "lifecycle">, locale: Locale = DEFAULT_LOCALE): string {
+  const t = getDictionary(locale).part;
+  const phrase = p.lifecycle.status === "active" ? t.titleActive : t.titleOther;
   return `${p.mpnDisplay} ${phrase} | ${p.manufacturer.nameEn}`;
 }
 
@@ -78,8 +113,9 @@ export function buildRobots(indexable: boolean): { index: boolean; follow: boole
 const ymd = (d: Date) => d.toISOString().slice(0, 10);
 
 /** 5.4 JSON-LD. 화면에 보이는 내용만 넣고 offers·price·aggregateRating·review는 넣지 않는다. */
-export function buildJsonLd(p: PartPageModel, siteUrl: string): Record<string, unknown>[] {
-  const abs = (path: string) => new URL(path, siteUrl).toString();
+export function buildJsonLd(p: PartPageModel, siteUrl: string, locale: Locale = DEFAULT_LOCALE): Record<string, unknown>[] {
+  const abs = (path: string) => new URL(localePath(locale, path), siteUrl).toString();
+  const lang = p.translation === "missing" ? LOCALE_TAG.ko : LOCALE_TAG[locale];
   const url = abs(p.path);
 
   const product: Record<string, unknown> = {
@@ -90,12 +126,13 @@ export function buildJsonLd(p: PartPageModel, siteUrl: string): Record<string, u
     mpn: p.mpnDisplay,
     brand: { "@type": "Organization", name: p.manufacturer.nameEn },
     url,
+    inLanguage: lang,
   };
   if (p.category) product.category = p.category.nameKo;
   if (p.summaryKo) product.description = p.summaryKo.trim();
 
   // 홈 > 카테고리 > 제조사 > 부품
-  const crumbs: { name: string; item: string }[] = [{ name: "홈", item: abs("/") }];
+  const crumbs: { name: string; item: string }[] = [{ name: getDictionary(locale).common.home, item: abs("/") }];
   if (p.category) crumbs.push({ name: p.category.nameKo, item: abs(`/categories/${p.category.slug}`) });
   crumbs.push({ name: p.manufacturer.nameEn, item: abs(`/manufacturers/${p.manufacturer.slug}`) });
   crumbs.push({ name: p.mpnDisplay, item: url });
@@ -110,6 +147,7 @@ export function buildJsonLd(p: PartPageModel, siteUrl: string): Record<string, u
     out.push({
       "@context": "https://schema.org",
       "@type": "FAQPage",
+      inLanguage: lang,
       mainEntity: p.faqs.map((f) => ({
         "@type": "Question",
         name: f.questionKo,

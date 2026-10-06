@@ -32,6 +32,9 @@ import { planImport, type ImportPlan } from "@/lib/parts/import-plan";
 import { findUnsupportedNumbers, type SummaryFacts } from "@/lib/parts/summary-draft";
 import { generateSummaryDraft, summaryDraftEnabled } from "@/lib/parts/summary-draft-llm";
 import { slugifyName } from "@/lib/parts/slug";
+import { sourceHash, TRANSLATABLE_LOCALES } from "@/lib/parts/translate";
+import { translationEnabled } from "@/lib/parts/translate-llm";
+import { translateAndSave, translationSource } from "@/lib/parts/translations";
 import { parseDateOnly, parseKeySpecs, parseLifecycle, validateDatasheetUrl } from "@/lib/parts/validate-part";
 
 const str = (fd: FormData, k: string) => {
@@ -427,4 +430,41 @@ export async function discardSummaryDraftAction(partId: string) {
   await requireAdmin();
   await db().part.update({ where: { id: partId }, data: { summaryDraftKo: null, summaryDraftAt: null } });
   revalidatePath(`/admin/parts/${partId}`);
+}
+// ───────────── 번역 (영·일·스페인어) ─────────────
+
+/** 영·일·스페인어 번역을 (다시) 만든다. 관리자가 고친 번역도 덮어쓴다 (버튼을 누른 경우) */
+export async function translatePartAction(partId: string) {
+  await requireAdmin();
+  const path = `/admin/parts/${partId}`;
+  if (!translationEnabled()) back(path, { error: "번역 기능이 꺼져 있습니다 (TRANSLATION_ENABLED, Anthropic API 키)." });
+  const results = await translateAndSave(partId);
+  revalidatePath(path);
+  const failed = results.filter((r) => !r.ok);
+  back(
+    path,
+    failed.length === 0
+      ? { message: "영어·일본어·스페인어 번역을 만들었습니다." }
+      : { error: `번역 실패: ${failed.map((f) => `${f.locale.toUpperCase()} - ${f.reason}`).join(" / ")}` },
+  );
+}
+
+/** 관리자가 고친 번역 저장 (요약·FAQ). 이후 정기 작업은 이 번역을 덮어쓰지 않는다 */
+export async function saveTranslationAction(partId: string, locale: string, fd: FormData) {
+  await requireAdmin();
+  const path = `/admin/parts/${partId}`;
+  if (!(TRANSLATABLE_LOCALES as string[]).includes(locale)) back(path, { error: "언어가 올바르지 않습니다." });
+  const row = await db().partTranslation.findUnique({ where: { partId_locale: { partId, locale } }, select: { faqs: true } });
+  if (!row) back(path, { error: "먼저 번역을 만들어 주세요." });
+  const faqs = (Array.isArray(row!.faqs) ? (row!.faqs as { q: string; a: string }[]) : []).map((f, i) => ({
+    q: str(fd, `q${i}`) || f.q,
+    a: str(fd, `a${i}`) || f.a,
+  }));
+  const src = await translationSource(partId);
+  await db().partTranslation.update({
+    where: { partId_locale: { partId, locale } },
+    data: { summary: str(fd, "summary") || null, faqs, method: "manual", ...(src ? { sourceHash: sourceHash(src) } : {}) },
+  });
+  revalidatePath(path);
+  back(path, { message: `${locale.toUpperCase()} 번역을 저장했습니다.` });
 }

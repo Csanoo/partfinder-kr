@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
+import { IBM_Plex_Sans_KR, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
+import { Logo } from "@/components/logo";
+import "../globals.css";
+
+// 관리자 화면은 공개 페이지(app/[lang])와 별도의 루트 레이아웃을 쓴다 (한국어 전용)
+const plexKr = IBM_Plex_Sans_KR({ weight: ["400", "500", "600", "700"], subsets: ["latin"], variable: "--font-plex-kr", display: "swap", preload: false });
+const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap" });
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "관리자", robots: { index: false, follow: false } };
 
@@ -17,6 +26,16 @@ const nav = [
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
+    <html lang="ko" className={`${plexKr.variable} ${jetbrains.variable} h-full antialiased`}>
+      <body className="min-h-full">
+        <header className="border-b border-line bg-surface">
+          <div className="mx-auto flex h-14 max-w-6xl items-center px-4">
+            <Link href="/" aria-label="사이트로 이동">
+              <Logo />
+            </Link>
+          </div>
+        </header>
+        <main className="mx-auto w-full max-w-6xl px-4 py-8">
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-1 border-b border-line pb-3">
         <span className="mr-2 rounded bg-brand-700 px-2 py-0.5 text-xs font-bold text-white">ADMIN</span>
@@ -32,5 +51,8 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
       </div>
       {children}
     </div>
+        </main>
+      </body>
+    </html>
   );
 }

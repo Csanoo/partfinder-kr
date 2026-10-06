@@ -4,6 +4,8 @@
  * - /eol 은 색인
  */
 import type { Lifecycle } from "@/lib/parts/page-model";
+import { localePath, type Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n";
 
 export const HUB_PAGE_SIZE = 100;
 
@@ -33,6 +35,8 @@ export interface HubModel {
   title: string;
   /** 화면 상단 설명 (관리자 입력 description_ko 또는 사실 문장) */
   intro: string;
+  /** 경로 표시·구조화 데이터용 짧은 이름 */
+  breadcrumbName: string;
   path: string;
   items: HubItem[];
   total: number;
@@ -58,15 +62,16 @@ export function pagePath(path: string, page: number): string {
 }
 
 /** 허브 JSON-LD: BreadcrumbList + ItemList (화면에 보이는 목록과 같은 순서·이름) */
-export function buildHubJsonLd(hub: HubModel, siteUrl: string, breadcrumbName: string): Record<string, unknown>[] {
-  const abs = (p: string) => new URL(p, siteUrl).toString();
+export function buildHubJsonLd(hub: HubModel, siteUrl: string, breadcrumbName: string, locale: Locale = "ko"): Record<string, unknown>[] {
+  const abs = (p: string) => new URL(localePath(locale, p), siteUrl).toString();
+  const home = getDictionary(locale).common.home;
   const offset = (hub.page - 1) * HUB_PAGE_SIZE;
   return [
     {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "홈", item: abs("/") },
+        { "@type": "ListItem", position: 1, name: home, item: abs("/") },
         { "@type": "ListItem", position: 2, name: breadcrumbName, item: abs(pagePath(hub.path, hub.page)) },
       ],
     },

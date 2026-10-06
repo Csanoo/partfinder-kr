@@ -12,6 +12,8 @@ import {
   removeAlternativeAction,
   removeFaqAction,
   removeVariantAction,
+  saveTranslationAction,
+  translatePartAction,
   setAlternativeVerifiedAction,
   setFaqPublishedAction,
   setStatusAction,
@@ -38,6 +40,9 @@ import { faqPublishable } from "@/lib/inquiry/to-faq";
 import { sourceForManufacturer } from "@/lib/manufacturer/registry";
 import { findUnsupportedNumbers } from "@/lib/parts/summary-draft";
 import { summaryDraftEnabled } from "@/lib/parts/summary-draft-llm";
+import { translationEnabled } from "@/lib/parts/translate-llm";
+import { translationStatus } from "@/lib/parts/translations";
+import { localePath, type Locale } from "@/i18n/config";
 import { db } from "@/lib/db";
 import { getQuality } from "@/lib/parts/admin";
 import { partPath } from "@/lib/parts/resolve-route";
@@ -51,7 +56,7 @@ export default async function EditPartPage(props: PageProps<"/admin/parts/[id]">
   const sp = await props.searchParams;
   if (!UUID_RE.test(id)) notFound();
 
-  const [part, categories, quality] = await Promise.all([
+  const [part, categories, quality, trStatus, translations] = await Promise.all([
     db().part.findUnique({
       where: { id },
       include: {
@@ -67,6 +72,8 @@ export default async function EditPartPage(props: PageProps<"/admin/parts/[id]">
     }),
     db().category.findMany({ orderBy: { nameKo: "asc" }, select: { id: true, nameKo: true } }),
     getQuality(id).catch(() => null),
+    translationStatus(id).catch(() => null),
+    db().partTranslation.findMany({ where: { partId: id }, select: { locale: true, summary: true, faqs: true } }),
   ]);
   if (part == null || quality == null) notFound();
 
@@ -242,6 +249,56 @@ export default async function EditPartPage(props: PageProps<"/admin/parts/[id]">
                 </button>
               </form>
               {!draftEnabled && <p className="text-xs text-muted">꺼져 있음: SUMMARY_DRAFT_ENABLED=true 와 ANTHROPIC_API_KEY 필요</p>}
+            </div>
+          </Card>
+
+          <Card title="번역 (영어·일본어·스페인어)">
+            <div className="space-y-3 text-sm">
+              {trStatus && (
+                <ul className="space-y-1">
+                  {(Object.entries(trStatus) as [Locale, { status: string; method: string | null; updatedAt: Date | null }][]).map(([l, st]) => (
+                    <li key={l} className="flex flex-wrap items-center gap-2">
+                      <span className="w-8 font-semibold uppercase">{l}</span>
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-xs ${st.status === "current" ? "bg-pcb-50 text-pcb-700 dark:bg-pcb-700/25 dark:text-pcb-100" : st.status === "stale" ? "bg-copper-50 text-copper-700 dark:bg-copper-700/20 dark:text-copper-200" : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"}`}
+                      >
+                        {st.status === "current" ? "최신" : st.status === "stale" ? "원문 변경됨" : "없음"}
+                      </span>
+                      {st.method === "manual" && <span className="text-xs text-muted">직접 수정</span>}
+                      {part.pageStatus === "published" && st.status !== "missing" && (
+                        <a href={localePath(l, publicPath)} target="_blank" rel="noreferrer" className="text-xs text-brand-600 underline dark:text-brand-300">
+                          보기
+                        </a>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="text-xs text-muted">요약·스펙·FAQ·대체품 비고를 번역합니다. 번역이 없는 언어의 부품 페이지는 한국어로 표시되고 검색엔진에 색인되지 않습니다.</p>
+              <form action={translatePartAction.bind(null, part.id)}>
+                <button className={btnSecondary} disabled={!translationEnabled()}>
+                  {translations.length > 0 ? "번역 다시 만들기" : "번역 만들기"}
+                </button>
+              </form>
+              {!translationEnabled() && <p className="text-xs text-muted">꺼져 있음: TRANSLATION_ENABLED=true 와 ANTHROPIC_API_KEY 필요</p>}
+              {translations.map((tr) => {
+                const faqs = Array.isArray(tr.faqs) ? (tr.faqs as { q: string; a: string }[]) : [];
+                return (
+                  <details key={tr.locale} className="rounded-md border border-line">
+                    <summary className="cursor-pointer px-3 py-2 text-xs font-semibold uppercase">{tr.locale} 번역 고치기</summary>
+                    <form action={saveTranslationAction.bind(null, part.id, tr.locale)} className="space-y-2 border-t border-line p-3">
+                      <textarea name="summary" rows={4} defaultValue={tr.summary ?? ""} className={inputCls} aria-label={`${tr.locale} 요약`} />
+                      {faqs.map((f, i) => (
+                        <div key={i} className="space-y-1">
+                          <input name={`q${i}`} defaultValue={f.q} className={inputCls} aria-label={`${tr.locale} FAQ ${i + 1} 질문`} />
+                          <textarea name={`a${i}`} rows={2} defaultValue={f.a} className={inputCls} aria-label={`${tr.locale} FAQ ${i + 1} 답변`} />
+                        </div>
+                      ))}
+                      <button className={btnPrimary}>저장 (직접 수정으로 표시)</button>
+                    </form>
+                  </details>
+                );
+              })}
             </div>
           </Card>
 

@@ -14,6 +14,8 @@ export async function purgeExpiredPersonalData(now = new Date()): Promise<{ purg
   const days = retentionDays();
   if (days == null) return { purged: 0, skipped: "PERSONAL_DATA_RETENTION_DAYS 미설정" };
   const before = new Date(now.getTime() - days * 86_400_000);
+  // 첨부 파일(BOM 등)에는 회사·담당자 정보가 섞일 수 있어 통째로 삭제한다
+  await db().inquiryAttachment.deleteMany({ where: { inquiry: { createdAt: { lt: before } } } });
   const r = await db().inquiry.updateMany({
     where: { createdAt: { lt: before }, personalDataPurgedAt: null },
     // 수요 통계(품번·수량·품목 수·용도·유입)는 남기고 사람을 식별할 수 있는 값만 지운다

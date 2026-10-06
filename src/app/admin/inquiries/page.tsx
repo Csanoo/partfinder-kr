@@ -39,6 +39,7 @@ export default async function InquiriesPage(props: PageProps<"/admin/inquiries">
         trafficSource: true,
         createdAt: true,
         part: { select: { mpnDisplay: true } },
+        _count: { select: { items: true, attachments: true } },
       },
     }),
     db().inquiry.count({ where: { status: "new" } }),
@@ -48,7 +49,7 @@ export default async function InquiriesPage(props: PageProps<"/admin/inquiries">
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="text-xl font-bold">
-          문의 <span className="ml-2 rounded-full bg-copper-500 px-2.5 py-0.5 text-sm text-white">신규 {newCount}</span>
+          문의·요청 <span className="ml-2 rounded bg-brand-600 px-2 py-0.5 text-sm text-white">신규 {newCount}</span>
         </h1>
       </div>
 
@@ -109,8 +110,10 @@ export default async function InquiriesPage(props: PageProps<"/admin/inquiries">
                 <td className="px-3 py-2">
                   <Link href={`/admin/inquiries/${r.id}`} className="mpn font-medium text-brand-700 hover:underline dark:text-brand-300">
                     {r.mpn}
-                  </Link>{" "}
-                  × {r.qty.toLocaleString("ko-KR")}
+                  </Link>
+                  {r.qty > 0 && ` × ${r.qty.toLocaleString("ko-KR")}`}
+                  {r._count.items > 1 && <span className="ml-1 text-xs text-muted">외 {r._count.items - 1}건</span>}
+                  {r._count.attachments > 0 && <span className="ml-1 rounded bg-background px-1 text-[11px] text-muted">첨부</span>}
                   {r.part && <span className="ml-1 rounded bg-brand-50 px-1 text-[11px] text-brand-700 dark:bg-brand-900/40 dark:text-brand-200">부품 페이지</span>}
                 </td>
                 <td className="px-3 py-2">{ITEM_BUCKET_LABEL[r.itemCountBucket]}</td>

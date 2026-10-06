@@ -1,6 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
-import type { PartPageModel } from "@/lib/parts/page-model";
+import { localizePart, type PartPageModel } from "@/lib/parts/page-model";
+import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
 import { evaluateQuality } from "@/lib/parts/quality";
 import { partPath } from "@/lib/parts/resolve-route";
 
@@ -83,6 +84,7 @@ async function toModel(part: PartRow): Promise<PartPageModel> {
       const alt = a.altPart;
       const altSlug = alt?.slugs[0]?.slug;
       return {
+        id: a.id,
         mpn: alt?.mpnDisplay ?? a.altMpnText ?? "",
         manufacturerName: alt?.manufacturer.nameEn ?? null,
         path: alt && alt.pageStatus === "published" && altSlug ? partPath(alt.manufacturer.slug, altSlug) : null,
@@ -97,16 +99,32 @@ async function toModel(part: PartRow): Promise<PartPageModel> {
       .map((r) => ({ mpn: r.mpnDisplay, manufacturerName: r.manufacturer.nameEn, path: partPath(r.manufacturer.slug, r.slugs[0].slug) })),
     path: partPath(part.manufacturer.slug, part.slugs[0]?.slug ?? ""),
     indexable: quality.indexable,
+    translation: "original",
   };
 }
 
+async function withLocale(model: PartPageModel, locale: Locale): Promise<PartPageModel> {
+  if (locale === DEFAULT_LOCALE) return model;
+  const t = await db().partTranslation.findUnique({
+    where: { partId_locale: { partId: model.id, locale } },
+    select: { summary: true, specs: true, faqs: true, altNotes: true, method: true },
+  });
+  return localizePart(model, locale, t);
+}
+
+/** 다른 언어 번역이 있는 언어 목록 (hreflang 용, 한국어 포함) */
+export async function translatedLocales(partId: string): Promise<Locale[]> {
+  const rows = await db().partTranslation.findMany({ where: { partId }, select: { locale: true } });
+  return [DEFAULT_LOCALE, ...rows.map((r) => r.locale as Locale)];
+}
+
 /** 공개 페이지: 정규 slug + 게시 상태만 (비정규 URL·410은 proxy에서 처리) */
-export async function loadPublishedPart(manufacturerSlug: string, mpnSlug: string): Promise<PartPageModel | null> {
+export async function loadPublishedPart(manufacturerSlug: string, mpnSlug: string, locale: Locale = DEFAULT_LOCALE): Promise<PartPageModel | null> {
   const row = await db().partSlug.findFirst({
     where: { slug: mpnSlug, isCanonical: true, manufacturer: { slug: manufacturerSlug }, part: { pageStatus: "published" } },
     select: { part: { include: partInclude } },
   });
-  return row ? toModel(row.part) : null;
+  return row ? withLocale(await toModel(row.part), locale) : null;
 }
 
 /** 관리자 미리보기: 상태 무관 */

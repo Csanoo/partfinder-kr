@@ -5,9 +5,19 @@ import { isBot } from "@/lib/search/search-log";
 import { db } from "@/lib/db";
 import { resolvePartRoute } from "@/lib/parts/resolve-route";
 import { prismaPartRouteRepo } from "@/lib/parts/service";
+import { DEFAULT_LOCALE, localePath, splitLocale, type Locale } from "@/i18n/config";
+import { LOCALE_HEADER, PATH_HEADER } from "@/i18n/headers";
 
 export const SESSION_COOKIE = "pf_sid";
 export const SESSION_HEADER = "x-pf-sid";
+
+/**
+ * 내부 rewrite 표시. 운영(standalone)에서는 rewrite 된 /ko/... 요청이 proxy 를 한 번 더 지나가므로
+ * 그 두 번째 통과를 구분해 그대로 통과시킨다 (아니면 /ko → / 301 규칙에 걸려 무한 리다이렉트).
+ * 값은 프로세스마다 무작위라 외부 요청이 흉내 낼 수 없다.
+ */
+const INTERNAL_HEADER = "x-pf-internal";
+const INTERNAL_TOKEN = crypto.randomUUID();
 
 const PART_PATH = /^\/parts\/([^/]+)\/([^/]+)\/?$/;
 const HUB_PATH = /^\/(manufacturers|categories)\/([^/]+)\/?$/;
@@ -26,25 +36,35 @@ export async function proxy(request: NextRequest) {
     return res;
   }
 
+  if (request.headers.get(INTERNAL_HEADER) === INTERNAL_TOKEN) return NextResponse.next();
+
+  // 기본 언어(한국어)는 접두어 없이: /ko/... → /... 301
+  if (request.nextUrl.pathname === `/${DEFAULT_LOCALE}` || request.nextUrl.pathname.startsWith(`/${DEFAULT_LOCALE}/`)) {
+    const url = request.nextUrl.clone();
+    url.pathname = request.nextUrl.pathname.slice(DEFAULT_LOCALE.length + 1) || "/";
+    return NextResponse.redirect(url, 301);
+  }
+  const { locale, path } = splitLocale(request.nextUrl.pathname);
+
   // 허브 URL: slug 는 소문자만 정규 → 대소문자·끝 슬래시 차이는 301
-  const hub = HUB_PATH.exec(request.nextUrl.pathname);
+  const hub = HUB_PATH.exec(path);
   if (hub) {
     const canonical = `/${hub[1]}/${hub[2].toLowerCase()}`;
-    if (request.nextUrl.pathname !== canonical) {
+    if (path !== canonical) {
       const url = request.nextUrl.clone();
-      url.pathname = canonical;
+      url.pathname = localePath(locale, canonical);
       return NextResponse.redirect(url, 301);
     }
   }
 
   // 부품 URL: 정규화 301, 비게시 410 (docs/SEO_SPEC.md 4장). Proxy는 Node.js 런타임이라 DB 조회 가능
-  const m = PART_PATH.exec(request.nextUrl.pathname);
+  const m = PART_PATH.exec(path);
   if (m) {
     try {
       const r = await resolvePartRoute(m[1], m[2], prismaPartRouteRepo(db()));
       if (r.kind === "redirect") {
         const url = request.nextUrl.clone();
-        url.pathname = r.location;
+        url.pathname = localePath(locale, r.location);
         return NextResponse.redirect(url, 301);
       }
       if (r.kind === "gone") {
@@ -58,20 +78,31 @@ export async function proxy(request: NextRequest) {
       console.error("[proxy] part route resolve failed:", err);
     }
   }
-  return withSession(request);
+  return withSession(request, locale, path);
 }
 
 /**
  * 익명 세션 쿠키 발급 (검색 로그의 session_id 용, 개인 식별 정보 아님).
  * 첫 요청에서도 서버 컴포넌트가 읽을 수 있도록 요청 헤더에도 넣어 전달한다.
  */
-function withSession(request: NextRequest) {
+function withSession(request: NextRequest, locale: Locale, path: string) {
   const existing = request.cookies.get(SESSION_COOKIE)?.value;
   const sid = existing ?? crypto.randomUUID();
 
   const headers = new Headers(request.headers);
   headers.set(SESSION_HEADER, sid);
-  const response = NextResponse.next({ request: { headers } });
+  headers.set(LOCALE_HEADER, locale);
+  headers.set(PATH_HEADER, path + request.nextUrl.search);
+  // 공개 페이지는 모두 app/[lang] 아래: 접두어 없는 한국어 주소는 /ko 로 rewrite (주소창은 그대로)
+  let response: NextResponse;
+  if (locale === DEFAULT_LOCALE) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${DEFAULT_LOCALE}${path === "/" ? "" : path}`;
+    headers.set(INTERNAL_HEADER, INTERNAL_TOKEN);
+    response = NextResponse.rewrite(url, { request: { headers } });
+  } else {
+    response = NextResponse.next({ request: { headers } });
+  }
 
   const cookieOpts = {
     httpOnly: true,

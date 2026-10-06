@@ -23,6 +23,7 @@ describe("cron 작업 인증", () => {
     expect(isCronJob("recompute-indexable")).toBe(true);
     expect(isCronJob("purge-personal-data")).toBe(true);
     expect(isCronJob("manufacturer-facts")).toBe(true);
+    expect(isCronJob("translate-parts")).toBe(true);
     expect(isCronJob("toString")).toBe(false);
     expect(isCronJob("drop-tables")).toBe(false);
   });

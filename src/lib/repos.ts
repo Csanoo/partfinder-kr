@@ -15,7 +15,14 @@ export const prismaSearchLogRepo: SearchLogRepo = {
 };
 
 export const prismaInquiryRepo: InquiryRepo = {
-  async create(data) {
-    return db().inquiry.create({ data, select: { id: true } });
+  async create(data, extra) {
+    return db().inquiry.create({
+      data: {
+        ...data,
+        ...(extra && extra.items.length > 0 ? { items: { create: extra.items } } : {}),
+        ...(extra?.attachment ? { attachments: { create: { ...extra.attachment, data: Buffer.from(extra.attachment.data) } } } : {}),
+      },
+      select: { id: true },
+    });
   },
 };

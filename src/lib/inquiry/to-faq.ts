@@ -23,7 +23,7 @@ export function scrubPersonalInfo(text: string, names: (string | null | undefine
 export interface InquiryForFaq {
   mpn: string;
   qty: number;
-  type: "quote" | "sourcing";
+  type: "quote" | "sourcing" | "request";
   memo: string | null;
   contactName: string | null;
   company: string | null;
@@ -33,7 +33,7 @@ export interface InquiryForFaq {
 export function buildFaqCandidate(q: InquiryForFaq): { questionKo: string; answerKo: string } {
   const memo = q.memo ? scrubPersonalInfo(q.memo, [q.contactName, q.company]).slice(0, 300) : "";
   const fallback =
-    q.type === "sourcing" ? `${q.mpn} 를 정식 유통사 외 경로로 구할 수 있나요?` : `${q.mpn} 견적은 어떻게 받나요?`;
+    q.type === "sourcing" ? `${q.mpn} 를 정식 유통사 외 경로로 구할 수 있나요?` : q.type === "request" ? `${q.mpn} 를 구할 수 있나요?` : `${q.mpn} 견적은 어떻게 받나요?`;
   return { questionKo: memo.length >= 5 ? memo : fallback, answerKo: FAQ_ANSWER_PLACEHOLDER };
 }
 
