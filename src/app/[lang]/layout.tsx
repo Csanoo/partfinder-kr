@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans_KR, JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono } from "next/font/google";
+// 본문 글꼴: Pretendard (한국어·영문), Pretendard JP (일본어). 패키지에서 자체 호스팅, 화면에 쓰인 글자 묶음만 내려받는다
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
+import "pretendard-jp/dist/web/variable/pretendardvariable-jp-dynamic-subset.css";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -10,14 +13,6 @@ import { fmt, getDictionary } from "@/i18n";
 import { site, siteName } from "@/lib/site";
 import "../globals.css";
 
-// next/font 로 자체 호스팅 (외부 요청 없음, 필요한 글리프만 분할 로드)
-const plexKr = IBM_Plex_Sans_KR({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-  variable: "--font-plex-kr",
-  display: "swap",
-  preload: false,
-});
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap" });
 
 // 모든 페이지를 요청 시점에 렌더링: DB·환경변수(SITE_URL 등)를 빌드 시점에 고정하지 않기 위함
@@ -47,7 +42,7 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
   const t = getDictionary(lang);
   const lp = (p: string) => localePath(lang, p);
   return (
-    <html lang={lang} className={`${plexKr.variable} ${jetbrains.variable} h-full antialiased`}>
+    <html lang={lang} className={`${jetbrains.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <JsonLd
           data={[
