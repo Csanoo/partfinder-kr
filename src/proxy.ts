@@ -11,6 +11,14 @@ import { LOCALE_HEADER, PATH_HEADER } from "@/i18n/headers";
 export const SESSION_COOKIE = "pf_sid";
 export const SESSION_HEADER = "x-pf-sid";
 
+/**
+ * 내부 rewrite 표시. 운영(standalone)에서는 rewrite 된 /ko/... 요청이 proxy 를 한 번 더 지나가므로
+ * 그 두 번째 통과를 구분해 그대로 통과시킨다 (아니면 /ko → / 301 규칙에 걸려 무한 리다이렉트).
+ * 값은 프로세스마다 무작위라 외부 요청이 흉내 낼 수 없다.
+ */
+const INTERNAL_HEADER = "x-pf-internal";
+const INTERNAL_TOKEN = crypto.randomUUID();
+
 const PART_PATH = /^\/parts\/([^/]+)\/([^/]+)\/?$/;
 const HUB_PATH = /^\/(manufacturers|categories)\/([^/]+)\/?$/;
 
@@ -27,6 +35,8 @@ export async function proxy(request: NextRequest) {
     res.headers.set("X-Robots-Tag", "noindex, nofollow");
     return res;
   }
+
+  if (request.headers.get(INTERNAL_HEADER) === INTERNAL_TOKEN) return NextResponse.next();
 
   // 기본 언어(한국어)는 접두어 없이: /ko/... → /... 301
   if (request.nextUrl.pathname === `/${DEFAULT_LOCALE}` || request.nextUrl.pathname.startsWith(`/${DEFAULT_LOCALE}/`)) {
@@ -88,6 +98,7 @@ function withSession(request: NextRequest, locale: Locale, path: string) {
   if (locale === DEFAULT_LOCALE) {
     const url = request.nextUrl.clone();
     url.pathname = `/${DEFAULT_LOCALE}${path === "/" ? "" : path}`;
+    headers.set(INTERNAL_HEADER, INTERNAL_TOKEN);
     response = NextResponse.rewrite(url, { request: { headers } });
   } else {
     response = NextResponse.next({ request: { headers } });
