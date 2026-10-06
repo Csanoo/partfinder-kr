@@ -21,36 +21,15 @@ const faq = [
   },
 ];
 
-const features = [
-  {
-    title: "정식 유통사 재고",
-    body: "유통사별 재고와 최소 주문 수량을 출처·조회 시각과 함께 확인합니다.",
-    icon: (
-      <path d="M4 7h16M4 12h16M4 17h10" strokeLinecap="round" />
-    ),
-  },
-  {
-    title: "단종·NRND 확인",
-    body: "유통사 표기 기준 수명주기 상태를 함께 보여 드립니다.",
-    icon: (
-      <>
-        <circle cx="12" cy="12" r="8" />
-        <path d="M12 8v4l3 2" strokeLinecap="round" />
-      </>
-    ),
-  },
-  {
-    title: "견적·소싱 문의",
-    body: "정식 유통사에서 구하기 어려운 부품은 소싱 문의를 남기세요.",
-    icon: (
-      <path d="M4 6h16v10H8l-4 4V6z" strokeLinejoin="round" />
-    ),
-  },
+const facts = [
+  { title: "정식 유통사 재고", body: "유통사별 재고·최소 주문 수량을 출처와 조회 시각과 함께 표시" },
+  { title: "단종·NRND 확인", body: "유통사 표기 기준 수명주기 상태를 함께 표시" },
+  { title: "견적·소싱 문의", body: "정식 유통사에서 구하기 어려운 부품은 소싱 문의" },
 ];
 
 export default function Home() {
   return (
-    <div className="space-y-14">
+    <div className="space-y-10">
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -63,80 +42,56 @@ export default function Home() {
         }}
       />
 
-      <section className="bg-circuit -mx-4 overflow-hidden px-4 py-16 sm:mx-0 sm:rounded-2xl sm:px-10 sm:py-20">
-        <div className="mx-auto max-w-3xl">
-          <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-400/30 bg-brand-900/50 px-3 py-1 text-xs font-medium text-brand-200">
-            <span className="size-1.5 rounded-full bg-copper-400" />
-            전자부품 품번 검색
+      <section className="space-y-4 border-b border-line pb-8">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">전자부품 품번 검색</h1>
+          <p className="mt-1 text-sm text-muted">
+            제조사 품번(MPN)으로 정식 유통사 재고와 단종 여부를 확인하고, 구하기 어려운 부품은 견적·소싱을 문의하세요.
           </p>
-          <h1 className="mb-3 text-3xl font-bold leading-tight text-white sm:text-4xl">
-            찾는 부품, 품번 하나로
-            <br />
-            재고부터 소싱까지
-          </h1>
-          <p className="mb-8 text-brand-100/80">
-            제조사 품번으로 정식 유통사 재고를 확인하고, 구하기 어려운 부품은 견적·소싱을 문의하세요.
-          </p>
-          <SearchForm size="lg" />
         </div>
-      </section>
-
-      <section aria-label="주요 기능" className="grid gap-4 sm:grid-cols-3">
-        {features.map((f) => (
-          <div key={f.title} className="rounded-xl border border-line bg-surface p-5">
-            <svg
-              viewBox="0 0 24 24"
-              className="mb-3 size-9 rounded-lg bg-brand-50 p-1.5 text-brand-600 dark:bg-brand-900/50 dark:text-brand-300"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.8}
-              aria-hidden="true"
-            >
-              {f.icon}
-            </svg>
-            <h2 className="mb-1 font-semibold">{f.title}</h2>
-            <p className="text-sm text-muted">{f.body}</p>
-          </div>
-        ))}
+        <SearchForm size="lg" />
+        <dl aria-label="주요 기능" className="grid gap-x-8 gap-y-3 pt-2 text-sm sm:grid-cols-3">
+          {facts.map((f) => (
+            <div key={f.title} className="border-l-2 border-brand-600 pl-3">
+              <dt className="font-semibold">{f.title}</dt>
+              <dd className="text-muted">{f.body}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       <HubLinks />
 
-      <section aria-labelledby="how-heading" className="grid gap-8 md:grid-cols-[1fr_1.4fr]">
+      <section aria-labelledby="how-heading" className="grid gap-8 md:grid-cols-[1fr_1.6fr]">
         <div>
-          <h2 id="how-heading" className="mb-4 text-xl font-bold">
+          <h2 id="how-heading" className="mb-3 text-base font-bold">
             이용 방법
           </h2>
-          <ol className="space-y-4">
+          <ol className="list-decimal space-y-2 pl-5 text-sm marker:font-semibold marker:text-muted">
             {[
               "제조사 품번(MPN)과 필요 수량을 입력합니다.",
               "정식 유통사별 재고와 단종 여부를 확인합니다.",
               "필요하면 견적 문의나 소싱 문의를 남깁니다.",
-            ].map((step, i) => (
-              <li key={step} className="flex gap-3">
-                <span className="mpn flex size-7 shrink-0 items-center justify-center rounded-md bg-copper-500 text-sm font-bold text-white">
-                  {i + 1}
-                </span>
-                <span className="pt-0.5">{step}</span>
-              </li>
+            ].map((step) => (
+              <li key={step}>{step}</li>
             ))}
           </ol>
         </div>
 
         <div aria-labelledby="home-faq-heading">
-          <h2 id="home-faq-heading" className="mb-4 text-xl font-bold">
+          <h2 id="home-faq-heading" className="mb-3 text-base font-bold">
             자주 묻는 질문
           </h2>
-          <div className="divide-y divide-line rounded-xl border border-line bg-surface">
+          <div className="divide-y divide-line border-y border-line">
             {faq.map((f) => (
-              <details key={f.question} className="group p-4" open>
-                <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
+              <details key={f.question} className="group py-3" open>
+                <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold">
                   {f.question}
                   <span className="text-muted transition-transform group-open:rotate-45" aria-hidden="true">
                     +
                   </span>
                 </summary>
-                <p className="mt-2 text-sm text-muted">{f.answer}</p>
+                <p className="mt-1.5 text-sm text-muted">{f.answer}</p>
               </details>
             ))}
           </div>

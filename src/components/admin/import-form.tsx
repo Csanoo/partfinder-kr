@@ -4,15 +4,15 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { importAction, type ImportState } from "@/app/admin/parts/actions";
 
-const btnPrimary = "rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50";
-const btnSecondary = "rounded-lg border border-line bg-surface px-4 py-2 text-sm hover:bg-brand-50 disabled:opacity-50 dark:hover:bg-brand-900/30";
+const btnPrimary = "rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50";
+const btnSecondary = "rounded-md border border-line bg-surface px-4 py-2 text-sm hover:bg-brand-50 disabled:opacity-50 dark:hover:bg-brand-900/30";
 
 export function ImportForm() {
   const [state, action, pending] = useActionState<ImportState, FormData>(importAction, { stage: "idle" });
 
   if (state.stage === "done" && state.result) {
     return (
-      <div className="space-y-3 rounded-xl border border-pcb-500/40 bg-pcb-50 p-4 text-sm dark:bg-pcb-700/20">
+      <div className="space-y-3 rounded-md border border-pcb-500/40 bg-pcb-50 p-4 text-sm dark:bg-pcb-700/20">
         <p className="font-semibold">{state.result.created}건을 초안으로 만들었습니다.</p>
         {state.result.failed.length > 0 && (
           <ul className="list-disc pl-5 text-red-700">
@@ -33,7 +33,7 @@ export function ImportForm() {
   const plan = state.plan;
   return (
     <div className="space-y-4">
-      <form action={action} className="space-y-3 rounded-xl border border-line bg-surface p-4">
+      <form action={action} className="space-y-3 rounded-md border border-line bg-surface p-4">
         <input type="hidden" name="mode" value="preview" />
         <input type="file" name="file" accept=".csv,text/csv" className="block text-sm" />
         <p className="text-xs text-muted">또는 아래에 CSV 내용을 붙여 넣으세요.</p>
@@ -41,7 +41,7 @@ export function ImportForm() {
           name="csv"
           rows={6}
           defaultValue={state.csv ?? ""}
-          className="mpn w-full rounded-lg border border-line bg-surface p-2 text-xs"
+          className="mpn w-full rounded-md border border-line bg-surface p-2 text-xs"
           placeholder="mpn,manufacturer,category,..."
         />
         <button disabled={pending} className={btnSecondary}>
@@ -50,7 +50,7 @@ export function ImportForm() {
       </form>
 
       {plan && (
-        <div className="space-y-3 rounded-xl border border-line bg-surface p-4 text-sm">
+        <div className="space-y-3 rounded-md border border-line bg-surface p-4 text-sm">
           <p>
             생성 <b>{plan.create.length}</b> · 건너뜀 <b>{plan.skipped.length}</b> · 오류{" "}
             <b className={plan.errors.length ? "text-red-600" : ""}>{plan.errors.length}</b>

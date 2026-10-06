@@ -19,7 +19,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-1 border-b border-line pb-3">
-        <span className="mr-2 rounded bg-copper-500 px-2 py-0.5 text-xs font-bold text-white">ADMIN</span>
+        <span className="mr-2 rounded bg-brand-700 px-2 py-0.5 text-xs font-bold text-white">ADMIN</span>
         {nav.map((n) => (
           <Link
             key={n.href}

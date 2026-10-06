@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 
 export const inputCls =
-  "w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm outline-none focus-visible:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-200 dark:focus-visible:ring-brand-800";
+  "w-full rounded-md border border-line bg-surface px-3 py-2 text-sm outline-none focus-visible:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-200 dark:focus-visible:ring-brand-800";
 export const btnPrimary =
-  "rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50";
+  "rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50";
 export const btnSecondary =
-  "rounded-lg border border-line bg-surface px-3 py-1.5 text-sm hover:bg-brand-50 dark:hover:bg-brand-900/30";
-export const btnDanger = "rounded-lg px-2 py-1 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30";
+  "rounded-md border border-line bg-surface px-3 py-1.5 text-sm hover:bg-brand-50 dark:hover:bg-brand-900/30";
+export const btnDanger = "rounded-md px-2 py-1 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30";
 
 const STATUS_STYLE: Record<string, string> = {
   draft: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
@@ -56,8 +56,8 @@ export function Notice({ error, message }: { error?: string; message?: string })
       role={error ? "alert" : "status"}
       className={
         error
-          ? "rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200"
-          : "rounded-lg border border-pcb-500/40 bg-pcb-50 p-3 text-sm text-pcb-700 dark:bg-pcb-700/20 dark:text-pcb-100"
+          ? "rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200"
+          : "rounded-md border border-pcb-500/40 bg-pcb-50 p-3 text-sm text-pcb-700 dark:bg-pcb-700/20 dark:text-pcb-100"
       }
     >
       {error || message}
@@ -77,7 +77,7 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
 
 export function Card({ title, children, actions }: { title: string; children: ReactNode; actions?: ReactNode }) {
   return (
-    <section className="rounded-xl border border-line bg-surface">
+    <section className="rounded-md border border-line bg-surface">
       <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-2.5">
         <h2 className="text-sm font-semibold">{title}</h2>
         {actions}

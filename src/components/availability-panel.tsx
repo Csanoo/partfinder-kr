@@ -11,7 +11,7 @@ import type { AvailabilityResponse, AvailabilityRow, AvailabilityStatus } from "
  * - 레이아웃 이동이 없도록 고정 높이.
  */
 
-const BOX = "h-44 overflow-y-auto rounded-lg border border-line";
+const BOX = "h-44 overflow-y-auto rounded-md border border-line";
 
 const LABEL: Record<AvailabilityStatus, string> = {
   in_stock: "재고 있음",

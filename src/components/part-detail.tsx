@@ -5,10 +5,6 @@ import { SOURCING_DISCLAIMER } from "@/components/sourcing-inquiry-box";
 import { parsePackage } from "@/lib/package/parse-package";
 import { LIFECYCLE_TEXT, manufacturerLabel, RELATION_TEXT, ymd, type PartPageModel } from "@/lib/parts/page-model";
 
-/** SEO_SPEC 제약 6. TODO(확인필요): 정확한 문구 */
-export const OPERATOR_NOTICE =
-  "본 사이트는 독립 운영되며, 소싱 문의는 협력 업체를 통해 처리됩니다. 제조사·정식 유통사와 무관합니다.";
-
 const lifecycleTone: Record<PartPageModel["lifecycle"]["status"], string> = {
   active: "bg-pcb-50 text-pcb-700 dark:bg-pcb-700/25 dark:text-pcb-100",
   nrnd: "bg-copper-100 text-copper-700 dark:bg-copper-700/25 dark:text-copper-200",
@@ -19,8 +15,8 @@ const lifecycleTone: Record<PartPageModel["lifecycle"]["status"], string> = {
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section aria-labelledby={id} className="rounded-xl border border-line bg-surface p-5">
-      <h2 id={id} className="mb-3 text-lg font-bold">
+    <section aria-labelledby={id} className="rounded-md border border-line bg-surface p-4 sm:p-5">
+      <h2 id={id} className="mb-3 text-base font-bold">
         {title}
       </h2>
       {children}
@@ -45,7 +41,7 @@ export function PartDetail({
   const lc = part.lifecycle;
 
   return (
-    <article className="space-y-6">
+    <article className="space-y-5">
       {/* 경로 */}
       <nav aria-label="경로" className="text-sm text-muted">
         <ol className="flex flex-wrap gap-1">
@@ -87,8 +83,8 @@ export function PartDetail({
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-        <div className="space-y-6">
+      <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
+        <div className="space-y-4">
           {/* 3. 기본 정보 */}
           <Section id="info-heading" title="기본 정보">
             <table className="w-full text-sm">
@@ -221,7 +217,7 @@ export function PartDetail({
               <ul className="grid gap-2 sm:grid-cols-2">
                 {part.related.map((r) => (
                   <li key={r.path}>
-                    <Link href={r.path} className="block rounded-lg border border-line px-3 py-2 hover:border-brand-400">
+                    <Link href={r.path} className="block rounded-md border border-line px-3 py-2 hover:border-brand-400">
                       <span className="mpn font-medium">{r.mpn}</span>
                       <span className="block text-xs text-muted">{r.manufacturerName}</span>
                     </Link>
@@ -233,17 +229,16 @@ export function PartDetail({
         </div>
 
         {/* 7. 소싱 문의 (시각적으로 분리) */}
-        <aside aria-labelledby="sourcing-heading" className="h-fit space-y-3 rounded-xl border-2 border-copper-300 bg-copper-50/60 p-5 lg:sticky lg:top-20 dark:border-copper-600 dark:bg-copper-700/10">
+        <aside aria-labelledby="sourcing-heading" className="h-fit space-y-3 rounded-md border border-line bg-surface p-5 lg:sticky lg:top-20">
           <h2 id="sourcing-heading" className="text-lg font-bold">
             소싱 문의
           </h2>
-          <p className="rounded-md border border-copper-200 bg-surface p-2 text-xs text-muted dark:border-copper-700">{SOURCING_DISCLAIMER}</p>
+          <p className="rounded-md border border-copper-200 bg-copper-50/50 p-2 text-xs text-copper-700 dark:border-copper-700 dark:bg-copper-700/10 dark:text-copper-200">{SOURCING_DISCLAIMER}</p>
           {sourcingForm}
         </aside>
       </div>
 
       {/* 10. 운영 주체 고지 */}
-      <p className="border-t border-line pt-4 text-xs text-muted">{OPERATOR_NOTICE}</p>
     </article>
   );
 }

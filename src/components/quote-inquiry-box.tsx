@@ -11,14 +11,14 @@ export function QuoteInquiryBox({
   searchLogId?: string | null;
 }) {
   return (
-    <section aria-labelledby="quote-inquiry-heading" className="flex flex-col rounded-xl border border-line bg-surface p-5">
+    <section aria-labelledby="quote-inquiry-heading" className="flex flex-col rounded-md border border-line bg-surface p-5">
       <h2 id="quote-inquiry-heading" className="mb-1 font-semibold">
         견적 문의
       </h2>
       <p className="mb-4 flex-1 text-sm text-muted">이 부품의 견적을 받아보세요.</p>
       <Link
         href={inquiryHref("/inquiry/quote", mpn, qty, searchLogId)}
-        className="inline-flex w-fit items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+        className="inline-flex w-fit items-center rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
       >
         견적 문의하기
       </Link>

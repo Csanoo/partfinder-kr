@@ -3,8 +3,8 @@
 import { useActionState } from "react";
 import { applyFactsAction, fetchFactsAction, type FactsState } from "@/app/admin/parts/actions";
 
-const btn = "rounded-lg border border-line bg-surface px-3 py-1.5 text-sm hover:bg-brand-50 disabled:opacity-50 dark:hover:bg-brand-900/30";
-const btnPrimary = "rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50";
+const btn = "rounded-md border border-line bg-surface px-3 py-1.5 text-sm hover:bg-brand-50 disabled:opacity-50 dark:hover:bg-brand-900/30";
+const btnPrimary = "rounded-md bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50";
 
 /** 제조사 공식 페이지에서 사실 정보를 가져와 현재 값과 비교하고, 체크한 항목만 반영 */
 export function ManufacturerFactsPanel({ partId, supported }: { partId: string; supported: boolean }) {

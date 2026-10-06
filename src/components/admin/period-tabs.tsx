@@ -20,7 +20,7 @@ export function PeriodTabs({ base, days }: { base: string; days: number }) {
 
 export function Kpi({ label, value, hint, tone }: { label: string; value: string | number; hint?: string; tone?: "warn" }) {
   return (
-    <div className={`rounded-xl border bg-surface p-4 ${tone === "warn" ? "border-copper-400" : "border-line"}`}>
+    <div className={`rounded-md border bg-surface p-4 ${tone === "warn" ? "border-copper-400" : "border-line"}`}>
       <p className="text-xs text-muted">{label}</p>
       <p className="mt-1 text-2xl font-bold tabular-nums">{value}</p>
       {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}

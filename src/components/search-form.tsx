@@ -9,12 +9,12 @@ export function SearchForm({
   defaultQty?: string;
   size?: "md" | "lg";
 }) {
-  const h = size === "lg" ? "h-14 text-base" : "h-11 text-sm";
+  const h = size === "lg" ? "h-12 text-base" : "h-10 text-sm";
   return (
     <Form
       action="/search"
       role="search"
-      className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-2 shadow-sm sm:flex-row sm:items-center"
+      className="flex flex-col gap-2 sm:flex-row sm:items-center"
     >
       <label className="flex-1">
         <span className="sr-only">품번</span>
@@ -25,7 +25,7 @@ export function SearchForm({
           autoComplete="off"
           spellCheck={false}
           placeholder="제조사 품번(MPN) 입력  예: ULN2003A"
-          className={`mpn w-full rounded-lg bg-transparent px-3 outline-none placeholder:font-sans placeholder:text-muted focus-visible:ring-2 focus-visible:ring-brand-400 ${h}`}
+          className={`mpn w-full rounded-md border border-line bg-surface px-3 outline-none focus:border-brand-500 placeholder:font-sans placeholder:text-muted focus-visible:ring-1 focus-visible:ring-brand-500 ${h}`}
         />
       </label>
       <div className="flex gap-2">
@@ -38,12 +38,12 @@ export function SearchForm({
             step={1}
             defaultValue={defaultQty}
             placeholder="수량 (선택)"
-            className={`w-full rounded-lg border border-line bg-transparent px-3 outline-none placeholder:text-muted focus-visible:ring-2 focus-visible:ring-brand-400 ${h}`}
+            className={`w-full rounded-md border border-line bg-surface px-3 outline-none focus:border-brand-500 placeholder:text-muted focus-visible:ring-1 focus-visible:ring-brand-500 ${h}`}
           />
         </label>
         <button
           type="submit"
-          className={`shrink-0 rounded-lg bg-brand-600 px-6 font-semibold text-white transition-colors hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400 ${h}`}
+          className={`shrink-0 rounded-md bg-brand-600 px-6 font-semibold text-white transition-colors hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400 ${h}`}
         >
           검색
         </button>

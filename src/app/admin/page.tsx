@@ -18,13 +18,13 @@ export default async function AdminDashboard(props: PageProps<"/admin">) {
 
       <Link
         href="/admin/inquiries?status=new"
-        className={`flex items-center justify-between rounded-xl border p-4 ${m.newCount > 0 ? "border-copper-400 bg-copper-50 dark:bg-copper-700/15" : "border-line bg-surface"}`}
+        className={`flex items-center justify-between rounded-md border p-4 ${m.newCount > 0 ? "border-copper-400 bg-copper-50 dark:bg-copper-700/15" : "border-line bg-surface"}`}
       >
         <span className="font-semibold">신규 문의</span>
         <span className="text-2xl font-bold tabular-nums">{m.newCount}건 →</span>
       </Link>
       {m.notifyFailed > 0 && (
-        <Link href="/admin/inquiries?notify=failed" className="block rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200">
+        <Link href="/admin/inquiries?notify=failed" className="block rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200">
           알림 메일 발송 실패 {m.notifyFailed}건 확인하기 →
         </Link>
       )}

@@ -90,7 +90,7 @@ export default async function FactsPage(props: PageProps<"/admin/facts">) {
             </button>
           </div>
         )}
-        <div className="overflow-x-auto rounded-xl border border-line bg-surface">
+        <div className="overflow-x-auto rounded-md border border-line bg-surface">
           <table className="w-full min-w-[900px] text-sm">
             <thead>
               <tr className="border-b border-line text-left text-xs text-muted">

@@ -52,7 +52,7 @@ export default async function InquiriesPage(props: PageProps<"/admin/inquiries">
         </h1>
       </div>
 
-      <form className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm">
+      <form className="flex flex-wrap items-center gap-2 rounded-md border border-line bg-surface p-3 text-sm">
         <select name="type" defaultValue={type} className={`${inputCls} w-32`}>
           <option value="">종류 전체</option>
           {Object.entries(INQUIRY_TYPE_LABEL).map(([k, v]) => (
@@ -80,7 +80,7 @@ export default async function InquiriesPage(props: PageProps<"/admin/inquiries">
         <button className={btnSecondary}>필터</button>
       </form>
 
-      <div className="overflow-x-auto rounded-xl border border-line bg-surface">
+      <div className="overflow-x-auto rounded-md border border-line bg-surface">
         <table className="w-full min-w-[960px] text-sm">
           <thead>
             <tr className="border-b border-line text-left text-xs text-muted">

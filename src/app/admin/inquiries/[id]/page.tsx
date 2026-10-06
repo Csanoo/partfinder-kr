@@ -48,7 +48,7 @@ export default async function InquiryDetailPage(props: PageProps<"/admin/inquiri
       <Notice error={first(sp.error)} />
 
       <form action={setInquiryStatusAction.bind(null, q.id)} className="flex items-center gap-2">
-        <select name="status" defaultValue={q.status} className="rounded-lg border border-line bg-surface px-3 py-2 text-sm">
+        <select name="status" defaultValue={q.status} className="rounded-md border border-line bg-surface px-3 py-2 text-sm">
           {Object.entries(INQUIRY_STATUS_LABEL).map(([k, v]) => (
             <option key={k} value={k}>
               {v}
@@ -60,7 +60,7 @@ export default async function InquiryDetailPage(props: PageProps<"/admin/inquiri
       </form>
       {q.notifyStatus !== "sent" && (
         <form action={resendNotificationAction.bind(null, q.id)}>
-          <button className="rounded-lg border border-line px-3 py-1.5 text-sm hover:bg-brand-50 dark:hover:bg-brand-900/30">알림 메일 다시 보내기</button>
+          <button className="rounded-md border border-line px-3 py-1.5 text-sm hover:bg-brand-50 dark:hover:bg-brand-900/30">알림 메일 다시 보내기</button>
         </form>
       )}
 

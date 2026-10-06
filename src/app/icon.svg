@@ -1,14 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1b85a8"/>
-      <stop offset="1" stop-color="#0b3343"/>
-    </linearGradient>
-  </defs>
-  <g stroke="#c4692b" stroke-width="3.5" stroke-linecap="round">
-    <path d="M22 3v7M32 3v7M42 3v7M22 54v7M32 54v7M42 54v7M3 22h7M3 32h7M3 42h7M54 22h7M54 32h7M54 42h7"/>
-  </g>
-  <rect x="10" y="10" width="44" height="44" rx="9" fill="url(#g)"/>
-  <circle cx="18" cy="18" r="2.5" fill="#d98244"/>
-  <text x="32" y="40" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="22" font-weight="800" fill="#fff" letter-spacing="-1">MS</text>
+  <rect width="64" height="64" rx="10" fill="#1c3866"/>
+  <text x="32" y="42" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="28" font-weight="700" fill="#fff" letter-spacing="-1">MS</text>
 </svg>

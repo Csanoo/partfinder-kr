@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { OPERATOR_NOTICE } from "@/components/part-detail";
 import { pagePath, type HubModel } from "@/lib/parts/hubs";
 import { LIFECYCLE_TEXT, ymd } from "@/lib/parts/page-model";
 
@@ -38,9 +37,9 @@ export function HubView({ hub, breadcrumbName }: { hub: HubModel; breadcrumbName
       )}
 
       {hub.items.length === 0 ? (
-        <p className="rounded-xl border border-line bg-surface p-6 text-muted">아직 등록된 부품이 없습니다.</p>
+        <p className="rounded-md border border-line bg-surface p-6 text-muted">아직 등록된 부품이 없습니다.</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-line bg-surface">
+        <div className="overflow-x-auto rounded-md border border-line bg-surface">
           <table className="w-full min-w-[600px] text-sm">
             <thead>
               <tr className="text-left text-xs text-muted">
@@ -87,7 +86,6 @@ export function HubView({ hub, breadcrumbName }: { hub: HubModel; breadcrumbName
         </nav>
       )}
 
-      <p className="border-t border-line pt-4 text-xs text-muted">{OPERATOR_NOTICE}</p>
     </div>
   );
 }

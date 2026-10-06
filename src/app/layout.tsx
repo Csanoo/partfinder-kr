@@ -71,7 +71,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Logo />
             </Link>
             <nav aria-label="주 메뉴" className="flex items-center gap-1 text-sm">
-              <Link href="/" className="rounded-md px-3 py-1.5 text-muted hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-900/40 dark:hover:text-brand-200">
+              <Link href="/" className="hidden sm:inline-block rounded-md px-3 py-1.5 text-muted hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-900/40 dark:hover:text-brand-200">
                 부품 검색
               </Link>
               <Link href="/eol" className="rounded-md px-3 py-1.5 text-muted hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-900/40 dark:hover:text-brand-200">
@@ -91,10 +91,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 
         <footer className="border-t border-line bg-surface">
           <div className="mx-auto max-w-6xl space-y-2 px-4 py-6 text-xs text-muted">
-            {/* TODO(확인필요): 운영 주체 고지 정확한 문구 (SEO 명세 제약 6) */}
-            <p>
-              본 사이트는 독립 운영되며, 소싱 문의는 협력 업체를 통해 처리됩니다. 제조사·정식 유통사와 무관합니다.
-            </p>
+            {/* 운영 주체 고지 (SEO 명세 제약 6): 모든 페이지 공통 푸터에 한 번만 표시 */}
+            <p>{site.operatorNotice}</p>
             <p>
               상호: {site.legalName} ({site.business.nameEn}) · 사업자등록번호: {site.business.registrationNo}
             </p>

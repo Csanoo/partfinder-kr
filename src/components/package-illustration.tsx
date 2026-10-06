@@ -296,7 +296,7 @@ export function PackageIllustration({ info, size = 120 }: { info: PackageInfo; s
 /** 일러스트 + 패키지명 캡션 */
 export function PackageFigure({ info, size = 120 }: { info: PackageInfo; size?: number }) {
   return (
-    <figure className="inline-flex flex-col items-center gap-1 rounded-xl border border-line bg-surface p-3">
+    <figure className="inline-flex flex-col items-center gap-1 rounded-md border border-line bg-surface p-3">
       <PackageIllustration info={info} size={size} />
       <figcaption className="mpn text-xs text-muted">
         {info.label}
